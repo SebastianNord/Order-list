@@ -1,0 +1,11 @@
+{
+  "name": "Rexel Order List",
+  "short_name": "Order List",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#2c1338",
+  "theme_color": "#2c1338",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
