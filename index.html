@@ -68,6 +68,13 @@ button{cursor:pointer;border:0;background:none}
 .bar input.txt{flex:1 1 150px;min-width:0;border:0;background:transparent;font-size:17px;padding:10px 0;outline:none}
 .bar input.txt::placeholder{color:var(--muted)}
 .bar:focus-within{box-shadow:0 14px 34px rgba(0,0,0,.3),0 0 0 3px var(--accent)}
+.bar{position:relative}
+.sug{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:20;background:var(--surface);color:var(--fg);border-radius:16px;box-shadow:0 14px 34px rgba(0,0,0,.3);padding:6px;display:flex;flex-direction:column;gap:2px}
+.sug[hidden]{display:none}
+.sug button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;font-size:15px;color:var(--fg)}
+.sug button .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sug button .sa{font-family:var(--mono);font-size:12px;background:var(--surface2);color:var(--muted);border-radius:8px;padding:3px 8px;flex:none}
+.sug button[aria-selected="true"],.sug button:hover{background:var(--accent-soft)}
 .step{display:inline-flex;align-items:center;background:var(--surface2);border-radius:999px}
 .step button{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:var(--fg)}
 .step button:hover{background:var(--line)}
@@ -326,15 +333,17 @@ async function connect(){
   await refetch(gen);loadFavs(gen);
 }
 
-async function addItem(text,qty){
+async function addItem(text,qty,article){
   text=(text||'').trim();if(!text||!S.canWrite)return false;
-  var q=Math.max(1,Math.min(999,qty|0||1)),late=isLate(),clean=text.slice(0,120);
+  var q=Math.max(1,Math.min(999,qty|0||1)),late=isLate(),clean=text.slice(0,120),art=(article||'').trim().slice(0,30);
   try{
     if(S.local){
-      S.items.push({id:newId(),pid:S.session.pid,date:today(),text:clean,key:norm(clean),qty:q,by:S.session.name,at:new Date().toISOString(),late:late,article:'',ordered:false});
+      S.items.push({id:newId(),pid:S.session.pid,date:today(),text:clean,key:norm(clean),qty:q,by:S.session.name,at:new Date().toISOString(),late:late,article:art,ordered:false});
       render();
     }else{
-      var r=await sb.from('items').insert({project_id:S.session.pid,day:today(),text:clean,qty:q,late:late});
+      var row={project_id:S.session.pid,day:today(),text:clean,qty:q,late:late};
+      if(art)row.article=art;
+      var r=await sb.from('items').insert(row);
       if(r.error)throw r.error;
       refetch(S.gen);
     }
@@ -493,17 +502,66 @@ function leave(){ls('ol.session',null);showJoin();}
 
 var qtyOut;
 function setQty(n){S.qty=Math.max(1,Math.min(999,n));if(qtyOut)qtyOut.textContent=S.qty;}
+
+/* suggestions: items already added in this project (loaded history), most used first, max 5.
+   Items already on my own list for today are hidden. */
+function suggest(q){
+  var nq=norm(q||'');if(nq.length<2)return [];
+  var d=today(),me=S.session.name,mine={},g={};
+  S.items.forEach(function(i){if(i.date===d&&i.by===me)mine[i.key]=1;});
+  S.items.forEach(function(i){
+    if(!i.key||i.key.indexOf(nq)<0||mine[i.key])return;
+    var at=i.at||'',x=g[i.key]||(g[i.key]={text:i.text,article:'',artAt:'',n:0,at:''});
+    x.n++;
+    if(at>=x.at){x.at=at;x.text=i.text;}
+    if(i.article&&at>=x.artAt){x.article=i.article;x.artAt=at;}
+  });
+  return Object.keys(g).map(function(k){return g[k];})
+    .sort(function(a,b){return b.n-a.n||b.at.localeCompare(a.at);}).slice(0,5);
+}
+
 function buildShell(){
-  var s=S.session; S.qty=S.qty||1;
+  var s=S.session; S.qty=S.qty||1;S.pickText='';S.pickArt='';
   qtyOut=h('output',{id:'qtyOut','aria-live':'polite'},String(S.qty));
-  var input=h('input',{class:'txt',id:'itemText',type:'text',autocomplete:'off',maxlength:'120',placeholder:t('whatNeed'),'aria-label':t('whatNeed')});
+  var input=h('input',{class:'txt',id:'itemText',type:'text',autocomplete:'off',maxlength:'120',placeholder:t('whatNeed'),'aria-label':t('whatNeed'),role:'combobox','aria-autocomplete':'list','aria-expanded':'false','aria-controls':'sug'});
   var go=h('button',{type:'submit',class:'go','aria-label':t('add'),id:'goBtn'},icon('plus'));
-  var form=h('form',{class:'bar',onsubmit:async function(e){e.preventDefault();var ok=await addItem(input.value,S.qty);if(ok){input.value='';setQty(1);input.focus();}}},
+  var sugBox=h('div',{class:'sug',id:'sug',role:'listbox',hidden:true}),sugs=[],sugIdx=-1;
+  function closeSug(){sugs=[];sugIdx=-1;sugBox.hidden=true;sugBox.replaceChildren();input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
+  function markSug(){
+    Array.prototype.forEach.call(sugBox.children,function(b,i){b.setAttribute('aria-selected',String(i===sugIdx));});
+    if(sugIdx>=0)input.setAttribute('aria-activedescendant','sug'+sugIdx);else input.removeAttribute('aria-activedescendant');
+  }
+  function pickSug(x){input.value=x.text;S.pickText=x.text;S.pickArt=x.article||'';closeSug();input.focus();}
+  function openSug(){
+    sugs=suggest(input.value);sugIdx=-1;sugBox.replaceChildren();
+    if(!sugs.length){closeSug();return;}
+    sugs.forEach(function(x,i){
+      sugBox.append(h('button',{type:'button',role:'option',id:'sug'+i,'aria-selected':'false',
+        onmousedown:function(e){e.preventDefault();},onclick:function(){pickSug(x);}},
+        h('span',{class:'nm'},x.text),x.article?h('span',{class:'sa'},x.article):null));
+    });
+    sugBox.hidden=false;input.setAttribute('aria-expanded','true');
+  }
+  input.addEventListener('input',function(){openSug();});
+  input.addEventListener('blur',closeSug);
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){closeSug();return;}
+    if(!sugs.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sugIdx=(sugIdx+1)%sugs.length;markSug();}
+    else if(e.key==='ArrowUp'){e.preventDefault();sugIdx=(sugIdx<=0?sugs.length:sugIdx)-1;markSug();}
+    else if(e.key==='Enter'&&sugIdx>=0){e.preventDefault();pickSug(sugs[sugIdx]);}
+  });
+  var form=h('form',{class:'bar',onsubmit:async function(e){
+    e.preventDefault();
+    var art=norm(input.value)===norm(S.pickText||'')?S.pickArt:'';
+    var ok=await addItem(input.value,S.qty,art);
+    if(ok){input.value='';S.pickText='';S.pickArt='';closeSug();setQty(1);input.focus();}
+  }},
     input,
     h('div',{class:'step',role:'group','aria-label':'Quantity'},
       h('button',{type:'button','aria-label':'−',onclick:function(){setQty(S.qty-1);}},icon('minus')),qtyOut,
       h('button',{type:'button','aria-label':'+',onclick:function(){setQty(S.qty+1);}},icon('plus'))),
-    go);
+    go,sugBox);
   var cutText=h('span',{id:'cutText'}),meter=h('div',{class:'meter',id:'meter'},h('i')),cutEdit=h('span',{id:'cutEdit'});
   var cut=h('div',{class:'cut'},icon('clock'),cutText,meter,cutEdit);
   var favs=h('div',{class:'favs',id:'favs'});
