@@ -62,7 +62,17 @@ button{cursor:pointer;border:0;background:none}
 .rolechip{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--plum-muted)}
 .iconbtn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--plum-muted)}
 .iconbtn:hover{background:rgba(255,255,255,.1);color:#fff}
-.pid{font-family:var(--mono);font-size:12px;background:var(--plum-2);border-radius:8px;padding:4px 8px;color:var(--plum-muted)}
+.pid{font-family:var(--mono);font-size:12px;background:var(--plum-2);border-radius:8px;padding:4px 8px;color:var(--plum-muted);max-width:55vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cogroup{display:grid;gap:8px}
+.cobox{position:relative}
+.cogroup .hint:empty{display:none}
+.linkbtn{justify-self:start;color:var(--accent);font-weight:600;font-size:14px;padding:2px;text-decoration:underline;text-underline-offset:3px}
+.addbox{display:grid;gap:12px;border:2px dashed var(--line);border-radius:14px;padding:12px}
+.addbox[hidden],.simbox[hidden]{display:none}
+.simbox{display:grid;gap:6px}
+.sim{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:10px;background:var(--surface2);color:var(--fg);font-size:15px}
+.sim .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sim .sa{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none}
 
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface);color:var(--fg);border-radius:20px;padding:8px 8px 8px 18px;box-shadow:0 14px 34px rgba(0,0,0,.3)}
 .bar input.txt{flex:1 1 150px;min-width:0;border:0;background:transparent;font-size:17px;padding:10px 0;outline:none}
@@ -244,7 +254,8 @@ var T={
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
   addedToast:'Added',removed:'Removed',errWrite:'Could not save. Try again.',copyManual:'Select the text and copy it:',you:'you',by:'by',
-  fav:'Favorite',favs:'Favorites',noCsv:'Nothing to export yet.',delAll:'Delete for everyone',delSure:'Tap again to delete',delOne:'Remove request',leadCode:'Lead code',leadCodeHint:'New project? Choose a code of at least 4 characters and share it only with other leads. Existing project? Enter its code.',codePh:'Your secret lead code',needCode:'Enter the lead code (at least 4 characters).',errNoProject:'No project with that ID. Ask your lead to create it first.',errWrongCode:'Wrong lead code for this project.',errServer:'Could not reach the server. Check your connection and try again.',rejoin:'Please join the project again.'},
+  fav:'Favorite',favs:'Favorites',noCsv:'Nothing to export yet.',delAll:'Delete for everyone',delSure:'Tap again to delete',delOne:'Remove request',leadCode:'Lead code',leadCodeHint:'New project? Choose a code of at least 4 characters and share it only with other leads. Existing project? Enter its code.',codePh:'Your secret lead code',needCode:'Enter the lead code (at least 4 characters).',errNoProject:'No project with that ID. Ask your lead to create it first.',errWrongCode:'Wrong lead code for this project.',errServer:'Could not reach the server. Check your connection and try again.',rejoin:'Please join the project again.',
+  company:'Company',companyPh:'Search name or org. number',noMatch:'No match. Add the company below.',addCompany:'Company not listed? Add it',orgNr:'Org. no.',orgLabel:'Organisation number',orgPh:'e.g. 556012-5790',coName:'Company name',coNamePh:'e.g. Nord Elinstallation AB',saveCompany:'Add company',alreadyAdded:'Already added. Tap to use it:',needCompany:'Choose your company.',errOrg:'That organisation number is not valid. Check the 10 digits.',errPersonal:'Organisation numbers that start like a personal number (sole traders) are not supported.',errCoName:'Enter the company name (2 to 60 characters).',coExists:'That company was already added. Selected it.',errNoCompany:'Company not found. Choose or add it first.'},
  sv:{tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
@@ -258,7 +269,8 @@ var T={
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
   addedToast:'Tillagd',removed:'Borttagen',errWrite:'Kunde inte spara. Försök igen.',copyManual:'Markera texten och kopiera:',you:'du',by:'av',
-  fav:'Favorit',favs:'Favoriter',noCsv:'Inget att exportera än.',delAll:'Ta bort för alla',delSure:'Tryck igen för att ta bort',delOne:'Ta bort rad',leadCode:'Ledarkod',leadCodeHint:'Nytt projekt? Välj en kod på minst 4 tecken och dela den bara med andra ledare. Finns projektet? Skriv dess kod.',codePh:'Din hemliga ledarkod',needCode:'Skriv ledarkoden (minst 4 tecken).',errNoProject:'Inget projekt med det ID:t. Be din ledare skapa det först.',errWrongCode:'Fel ledarkod för det här projektet.',errServer:'Kunde inte nå servern. Kontrollera uppkopplingen och försök igen.',rejoin:'Gå med i projektet igen.'}
+  fav:'Favorit',favs:'Favoriter',noCsv:'Inget att exportera än.',delAll:'Ta bort för alla',delSure:'Tryck igen för att ta bort',delOne:'Ta bort rad',leadCode:'Ledarkod',leadCodeHint:'Nytt projekt? Välj en kod på minst 4 tecken och dela den bara med andra ledare. Finns projektet? Skriv dess kod.',codePh:'Din hemliga ledarkod',needCode:'Skriv ledarkoden (minst 4 tecken).',errNoProject:'Inget projekt med det ID:t. Be din ledare skapa det först.',errWrongCode:'Fel ledarkod för det här projektet.',errServer:'Kunde inte nå servern. Kontrollera uppkopplingen och försök igen.',rejoin:'Gå med i projektet igen.',
+  company:'Företag',companyPh:'Sök namn eller org.nr',noMatch:'Ingen träff. Lägg till företaget nedan.',addCompany:'Saknas företaget? Lägg till det',orgNr:'Org.nr',orgLabel:'Organisationsnummer',orgPh:'t.ex. 556012-5790',coName:'Företagsnamn',coNamePh:'t.ex. Nord Elinstallation AB',saveCompany:'Lägg till företag',alreadyAdded:'Finns redan. Tryck för att välja:',needCompany:'Välj ditt företag.',errOrg:'Organisationsnumret är inte giltigt. Kontrollera de 10 siffrorna.',errPersonal:'Organisationsnummer som börjar som ett personnummer (enskild firma) stöds inte.',errCoName:'Skriv företagsnamnet (2 till 60 tecken).',coExists:'Företaget fanns redan. Det är valt.',errNoCompany:'Företaget hittades inte. Välj eller lägg till det först.'}
 };
 var lang=ls('ol.lang')||((navigator.language||'').slice(0,2)==='sv'?'sv':'en');
 function t(k){return (T[lang]&&T[lang][k])||T.en[k]||k;}
@@ -291,13 +303,13 @@ async function ensureAuth(){
 }
 async function refetch(gen){
   if(S.demo||!S.session||!sb)return;
-  var pid=S.session.pid,since=dstr(new Date(Date.now()-8*864e5));
+  var pid=S.session.pid,co=S.session.co,since=dstr(new Date(Date.now()-8*864e5));
   try{
-    var a=await sb.from('items').select('*').eq('project_id',pid).gte('day',since).order('created_at',{ascending:true}).limit(1000);
+    var a=await sb.from('items').select('*').eq('company_id',co).eq('project_id',pid).gte('day',since).order('created_at',{ascending:true}).limit(1000);
     if(gen!==S.gen)return;
     if(a.error)throw a.error;
     S.items=a.data.map(mapRow);S.ready=true;S.slow=false;clearTimeout(slowTimer);
-    var p=await sb.from('projects').select('cutoff').eq('id',pid).maybeSingle();
+    var p=await sb.from('projects').select('cutoff').eq('company_id',co).eq('id',pid).maybeSingle();
     if(gen!==S.gen)return;
     if(p.data&&p.data.cutoff&&!S.editCut){S.cutoff=String(p.data.cutoff).slice(0,5);updateCut();}
     render();
@@ -305,7 +317,7 @@ async function refetch(gen){
 }
 async function loadFavs(gen){
   try{
-    var f=await sb.from('favorites').select('list').eq('project_id',S.session.pid).maybeSingle();
+    var f=await sb.from('favorites').select('list').eq('company_id',S.session.co).eq('project_id',S.session.pid).maybeSingle();
     if(gen!==S.gen)return;
     S.favs=(f.data&&Array.isArray(f.data.list))?f.data.list:[];renderFavs();
   }catch(e){}
@@ -318,7 +330,7 @@ async function connect(){
   slowTimer=setTimeout(function(){ if(!S.ready){S.slow=true;render();} },10000);
   try{
     var ses=await ensureAuth();if(gen!==S.gen)return;
-    var m=await sb.from('members').select('name,role').eq('project_id',S.session.pid).eq('user_id',ses.user.id).maybeSingle();
+    var m=await sb.from('members').select('name,role').eq('company_id',S.session.co).eq('project_id',S.session.pid).eq('user_id',ses.user.id).maybeSingle();
     if(gen!==S.gen)return;
     if(m.error)throw m.error;
     if(!m.data){leave();toast(t('rejoin'));return;}
@@ -326,7 +338,8 @@ async function connect(){
     ls('ol.session',JSON.stringify(S.session));buildShell();
   }catch(e){ if(gen!==S.gen)return; S.ready=true;S.slow=true;render();return; }
   var pid=S.session.pid;
-  channel=sb.channel('items-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(){
+  /* realtime filters take one column; other companies' rows are blocked by RLS, so project_id is enough */
+  channel=sb.channel('items-'+S.session.co+'-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(){
     clearTimeout(refetchT);refetchT=setTimeout(function(){refetch(gen);},150);
   }).subscribe();
   pollTimer=setInterval(function(){refetch(gen);},30000);
@@ -341,7 +354,7 @@ async function addItem(text,qty,article){
       S.items.push({id:newId(),pid:S.session.pid,date:today(),text:clean,key:norm(clean),qty:q,by:S.session.name,at:new Date().toISOString(),late:late,article:art,ordered:false});
       render();
     }else{
-      var row={project_id:S.session.pid,day:today(),text:clean,qty:q,late:late};
+      var row={company_id:S.session.co,project_id:S.session.pid,day:today(),text:clean,qty:q,late:late};
       if(art)row.article=art;
       var r=await sb.from('items').insert(row);
       if(r.error)throw r.error;
@@ -381,7 +394,7 @@ async function setFavs(list){
   S.favs=list;renderFavs();
   if(S.local)return;
   try{
-    var r=await sb.from('favorites').upsert({user_id:S.uid,project_id:S.session.pid,list:list},{onConflict:'user_id,project_id'});
+    var r=await sb.from('favorites').upsert({user_id:S.uid,company_id:S.session.co,project_id:S.session.pid,list:list},{onConflict:'user_id,company_id,project_id'});
     if(r.error)throw r.error;
   }catch(e){toast(t('errWrite'));}
 }
@@ -394,7 +407,7 @@ async function setCutoff(v){
   if(!/^\d\d:\d\d$/.test(v))return;S.cutoff=v;S.editCut=false;updateCut();render();
   if(S.local)return;
   try{
-    var r=await sb.from('projects').update({cutoff:v}).eq('id',S.session.pid);
+    var r=await sb.from('projects').update({cutoff:v}).eq('company_id',S.session.co).eq('id',S.session.pid);
     if(r.error)throw r.error;
   }catch(e){toast(t('errWrite'));}
 }
@@ -411,6 +424,23 @@ function demoItems(){
     mk(d,'Lisa','Skruv 4x40 trä',1,{late:true}),
     mk(y,'Johan','Kabelklammer 8 mm',50),mk(y,'Amir','Wago 221-413 kopplingsplint',30),mk(y,'Lisa','Bits PZ2',2),mk(y,'Marcus','Dosa 1-fack kapp',20)
   ];
+}
+
+/* ---------- companies ---------- */
+function digits(s){return String(s||'').replace(/\D/g,'');}
+function fmtOrg(o){return o&&o.length===10?o.slice(0,6)+'-'+o.slice(6):(o||'');}
+/* search stored companies by name or org. number prefix; nameOnly skips the org. number match */
+async function searchCompanies(q,nameOnly){
+  var txt=String(q||'').replace(/[\\%_,().*:"']/g,' ').replace(/\s+/g,' ').trim(),d=digits(q);
+  if(!sb)return [];
+  var f=[];
+  if(txt.length>=2)f.push('name.ilike.*'+txt+'*');
+  if(!nameOnly&&d.length>=2)f.push('org_nr.like.'+d+'*');
+  if(!f.length)return [];
+  await ensureAuth();
+  var r=await sb.from('companies').select('org_nr,name').or(f.join(',')).order('name').limit(6);
+  if(r.error)throw r.error;
+  return r.data||[];
 }
 
 /* ---------- derived ---------- */
@@ -432,6 +462,90 @@ function dayLabel(ds){return new Date(ds+'T12:00:00').toLocaleDateString(lang===
 /* ---------- screens ---------- */
 function showJoin(){
   S.session=null;S.gen++;stopSync();clearInterval(tick);
+  /* company picker: search stored companies by name or org. number, or add one with its org. number */
+  var sel=null,sugItems=[],sugIdx=-1,searchN=0,searchT=null,simT=null;
+  try{var lc=JSON.parse(ls('ol.co')||'null');if(lc&&lc.org_nr&&lc.name)sel={org_nr:lc.org_nr,name:lc.name};}catch(e){}
+  var coIn=h('input',{type:'text',id:'company',autocomplete:'off',placeholder:t('companyPh'),maxlength:'60',role:'combobox','aria-autocomplete':'list','aria-expanded':'false','aria-controls':'cosug'});
+  var coSug=h('div',{class:'sug',id:'cosug',role:'listbox',hidden:true});
+  var coInfo=h('p',{class:'hint'});
+  var orgIn=h('input',{type:'text',id:'orgnr',inputmode:'numeric',autocomplete:'off',placeholder:t('orgPh'),maxlength:'16'});
+  var cnIn=h('input',{type:'text',id:'coname',autocomplete:'off',placeholder:t('coNamePh'),maxlength:'60'});
+  var simBox=h('div',{class:'simbox',hidden:true});
+  var addErr=h('div',{class:'err',role:'alert'});
+  var addGo=h('button',{type:'button',class:'alt',onclick:function(){addCompany();}},t('saveCompany'));
+  var addBox=h('div',{class:'addbox',hidden:true},
+    h('label',{for:'orgnr'},t('orgLabel'),orgIn),h('label',{for:'coname'},t('coName'),cnIn),simBox,addErr,addGo);
+  function showSel(){coIn.value=sel?sel.name:'';coInfo.textContent=sel?t('orgNr')+' '+fmtOrg(sel.org_nr):'';}
+  function closeSug(){coSug.hidden=true;coIn.setAttribute('aria-expanded','false');sugItems=[];sugIdx=-1;}
+  function pick(c){sel={org_nr:c.org_nr,name:c.name};ls('ol.co',JSON.stringify(sel));showSel();closeSug();addBox.hidden=true;simBox.hidden=true;err.textContent='';}
+  function renderSug(list){
+    sugItems=list;sugIdx=-1;coSug.replaceChildren();
+    list.forEach(function(c){coSug.append(h('button',{type:'button',role:'option','aria-selected':'false',onmousedown:function(e){e.preventDefault();},onclick:function(){pick(c);}},h('span',{class:'nm'},c.name),h('span',{class:'sa'},fmtOrg(c.org_nr))));});
+    coSug.hidden=!list.length;coIn.setAttribute('aria-expanded',String(!!list.length));
+  }
+  coIn.addEventListener('input',function(){
+    sel=null;coInfo.textContent='';clearTimeout(searchT);var q=coIn.value,n=++searchN;
+    if(q.trim().length<2){closeSug();return;}
+    searchT=setTimeout(async function(){
+      try{var rows=await searchCompanies(q);if(n!==searchN)return;renderSug(rows);coInfo.textContent=rows.length?'':t('noMatch');}
+      catch(e){if(n===searchN)closeSug();}
+    },200);
+  });
+  coIn.addEventListener('keydown',function(e){
+    if(coSug.hidden||!sugItems.length)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();sugIdx=(sugIdx+(e.key==='ArrowDown'?1:-1)+sugItems.length)%sugItems.length;
+      Array.prototype.forEach.call(coSug.children,function(b,i){b.setAttribute('aria-selected',String(i===sugIdx));});
+    }else if(e.key==='Enter'&&sugIdx>=0){e.preventDefault();pick(sugItems[sugIdx]);}
+    else if(e.key==='Escape')closeSug();
+  });
+  coIn.addEventListener('blur',function(){setTimeout(closeSug,150);});
+  /* near-duplicate warning: existing companies with a similar name are offered before adding a new one */
+  cnIn.addEventListener('input',function(){
+    clearTimeout(simT);var q=cnIn.value;
+    if(q.trim().length<3){simBox.hidden=true;return;}
+    simT=setTimeout(async function(){
+      try{
+        var rows=await searchCompanies(q,true);if(cnIn.value!==q)return;
+        simBox.replaceChildren();
+        if(rows.length){simBox.append(h('div',{class:'hint'},t('alreadyAdded')));
+          rows.forEach(function(c){simBox.append(h('button',{type:'button',class:'sim',onclick:function(){pick(c);}},h('span',{class:'nm'},c.name),h('span',{class:'sa'},fmtOrg(c.org_nr))));});}
+        simBox.hidden=!rows.length;
+      }catch(e){simBox.hidden=true;}
+    },250);
+  });
+  function openAdd(){
+    addBox.hidden=!addBox.hidden;addErr.textContent='';
+    if(addBox.hidden)return;
+    var v=coIn.value.trim();
+    if(v){ if(digits(v).length>=Math.max(6,v.replace(/[\s-]/g,'').length)){orgIn.value=digits(v);}else if(!cnIn.value){cnIn.value=v;} }
+    (orgIn.value?cnIn:orgIn).focus();
+  }
+  function addError(e){
+    var m=String((e&&e.message)||'');
+    if(m.indexOf('bad_org_nr')>=0)return t('errOrg');
+    if(m.indexOf('personal_number')>=0)return t('errPersonal');
+    if(m.indexOf('bad_company_name')>=0)return t('errCoName');
+    return t('errServer');
+  }
+  async function addCompany(){
+    addErr.textContent='';
+    var o=digits(orgIn.value),nm=cnIn.value.trim().replace(/\s+/g,' ');
+    if(o.length<10){addErr.textContent=t('errOrg');orgIn.focus();return;}
+    if(nm.length<2||nm.length>60){addErr.textContent=t('errCoName');cnIn.focus();return;}
+    if(!sb){addErr.textContent=t('errServer');return;}
+    addGo.disabled=true;
+    try{
+      await ensureAuth();
+      var r=await sb.rpc('add_company',{p_org:o,p_name:nm});
+      if(r.error)throw r.error;
+      pick({org_nr:r.data.org_nr,name:r.data.name});
+      if(!r.data.created)toast(t('coExists'));
+    }catch(e){addErr.textContent=addError(e);}
+    addGo.disabled=false;
+  }
+  var openAddBtn=h('button',{type:'button',class:'linkbtn',onclick:openAdd},t('addCompany'));
+  showSel();
   var pid=h('input',{type:'text',id:'pid',autocomplete:'off',autocapitalize:'characters',placeholder:t('pidPh'),maxlength:'24'});
   var name=h('input',{type:'text',id:'uname',autocomplete:'given-name',placeholder:t('namePh'),maxlength:'30'});
   var code=h('input',{type:'text',id:'leadcode',autocomplete:'off',autocapitalize:'none',spellcheck:'false',placeholder:t('codePh'),maxlength:'40'});
@@ -444,6 +558,7 @@ function showJoin(){
   var btn=h('button',{type:'submit',class:'go2'},t('join'),icon('plus'));
   function joinError(e){
     var m=String((e&&e.message)||'');
+    if(m.indexOf('company_not_found')>=0)return t('errNoCompany');
     if(m.indexOf('project_not_found')>=0)return role==='lead'?t('needCode'):t('errNoProject');
     if(m.indexOf('wrong_lead_code')>=0)return t('errWrongCode');
     if(m.indexOf('bad_project_id')>=0)return t('needPid');
@@ -456,19 +571,21 @@ function showJoin(){
     err.textContent='';
     if(!n){err.textContent=t('needName');name.focus();return;}
     if(p.length<2){err.textContent=t('needPid');pid.focus();return;}
-    if(p==='DEMO'){start({pid:'DEMO',name:n,role:role});return;}
+    if(p==='DEMO'){start({co:'DEMO',coName:'Demo',pid:'DEMO',name:n,role:role});return;}
+    if(!sel){err.textContent=t('needCompany');coIn.focus();return;}
     var c=code.value.trim();
     if(role==='lead'&&c.length<4){err.textContent=t('needCode');code.focus();return;}
     if(!sb){err.textContent=t('errServer');return;}
     btn.disabled=true;
     try{
       await ensureAuth();
-      var r=await sb.rpc('join_project',{p_id:p,p_name:n,p_lead:role==='lead',p_lead_code:role==='lead'?c:null});
+      var r=await sb.rpc('join_project',{p_company:sel.org_nr,p_id:p,p_name:n,p_lead:role==='lead',p_lead_code:role==='lead'?c:null});
       if(r.error)throw r.error;
-      start({pid:r.data.project_id,name:r.data.name,role:r.data.role});
+      start({co:r.data.company_id,coName:sel.name,pid:r.data.project_id,name:r.data.name,role:r.data.role});
     }catch(e){err.textContent=joinError(e);btn.disabled=false;}
   }
   var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go(false);}},
+    h('div',{class:'cogroup'},h('div',{class:'cobox'},h('label',{for:'company'},t('company'),coIn),coSug),coInfo,openAddBtn,addBox),
     h('label',{for:'pid'},t('projectId'),pid),
     h('label',{for:'uname'},t('yourName'),name),
     h('div',null,h('div',{style:'font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px'},t('role')),h('div',{class:'roles'},b1,b2)),
@@ -566,7 +683,7 @@ function buildShell(){
   var cut=h('div',{class:'cut'},icon('clock'),cutText,meter,cutEdit);
   var favs=h('div',{class:'favs',id:'favs'});
   var top=h('div',{class:'top'},h('div',{class:'wrap'},
-    h('div',{class:'brandrow'},brand(),h('span',{class:'pid'},s.pid),h('div',{class:'sp'}),langSeg(),
+    h('div',{class:'brandrow'},brand(),h('span',{class:'pid'},(s.coName&&!S.demo?s.coName+' · ':'')+s.pid),h('div',{class:'sp'}),langSeg(),
       h('div',{class:'me'},h('div',{class:'av'},(s.name[0]||'?').toUpperCase()),h('div',null,h('div',{class:'nm'},s.name),h('div',{class:'rolechip'},isLead()?t('leadRole'):t('electrician'))),
         h('button',{class:'iconbtn',type:'button','aria-label':t('leave'),title:t('leave'),onclick:leave},icon('out')))),
     form,favs,cut));
@@ -759,7 +876,7 @@ document.addEventListener('visibilitychange',function(){ if(document.visibilityS
 document.addEventListener('focusout',function(){ if(S.dirty){setTimeout(function(){ var a=document.activeElement; if(!(a&&a.classList&&a.classList.contains('art'))){S.dirty=false;render();} },60);} });
 function recent(it){var d=new Date(it.at);return !isNaN(d)&&Date.now()-d<3000;}
 var saved=null;try{saved=JSON.parse(ls('ol.session')||'null');}catch(e){}
-if(saved&&saved.pid&&saved.name&&(saved.role==='lead'||saved.role==='electrician'))start(saved);else showJoin();
+if(saved&&saved.co&&saved.pid&&saved.name&&(saved.role==='lead'||saved.role==='electrician'))start(saved);else showJoin();
 })();
 </script>
 </body>
