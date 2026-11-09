@@ -6,7 +6,8 @@ as CSV for Rexel.
 
 - Swedish and English, light and dark theme
 - Join with project ID and name. The lead also uses a lead code
-- Live sync between phones, cut-off time, history and favorites
+- Live sync between phones, cut-off time, favorites
+- History: flat list of every item ever added in the project (no names, no status) with a quantity picker to add it to today's order
 - Static site (`index.html`), no build step
 
 ## How it fits together

@@ -250,7 +250,7 @@ var T={
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
   rexel:'Find on Rexel',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
   copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
-  nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noHistory:'No earlier days yet',noHistoryP:'Past lists show up here so you can add the same things again.',
+  nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
   addedToast:'Added',removed:'Removed',errWrite:'Could not save. Try again.',copyManual:'Select the text and copy it:',you:'you',by:'by',
@@ -265,7 +265,7 @@ var T={
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
   rexel:'Hitta hos Rexel',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
   copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
-  nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noHistory:'Inga tidigare dagar än',noHistoryP:'Tidigare listor visas här så att du kan lägga till samma saker igen.',
+  nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
   addedToast:'Tillagd',removed:'Borttagen',errWrite:'Kunde inte spara. Försök igen.',copyManual:'Markera texten och kopiera:',you:'du',by:'av',
@@ -315,6 +315,37 @@ async function refetch(gen){
     render();
   }catch(e){ if(gen!==S.gen)return; S.ready=true;S.slow=true;render(); }
 }
+/* history: every distinct item ever added in this project (no names, no status), newest wording wins */
+function histFrom(rows){
+  var m={},o=[];
+  rows.forEach(function(r){
+    var k=r.key||norm(r.text),x=m[k];
+    if(!x){x=m[k]={key:k,text:r.text,article:'',n:0};o.push(x);}
+    x.n++;if(r.article&&!x.article)x.article=r.article;
+  });
+  return o.sort(function(a,b){return a.text.localeCompare(b.text,lang);});
+}
+async function loadHistory(){
+  var gen=S.gen;
+  if(!S.session)return;
+  if(S.demo||S.local){S.hist=histFrom(S.items.slice().reverse());render();return;}
+  if(!sb)return;
+  S.histLoading=!S.hist;S.histErr=false;render();
+  try{
+    var rows=[],from=0,size=1000,co=S.session.co,pid=S.session.pid;
+    for(;;){
+      var r=await sb.from('items').select('key,text,article').eq('company_id',co).eq('project_id',pid)
+        .order('created_at',{ascending:false}).order('id').range(from,from+size-1);
+      if(gen!==S.gen)return;
+      if(r.error)throw r.error;
+      rows=rows.concat(r.data);
+      if(r.data.length<size)break;
+      from+=size;
+    }
+    S.hist=histFrom(rows);
+  }catch(e){ if(gen!==S.gen)return; S.histErr=true; }
+  S.histLoading=false;render();
+}
 async function loadFavs(gen){
   try{
     var f=await sb.from('favorites').select('list').eq('company_id',S.session.co).eq('project_id',S.session.pid).maybeSingle();
@@ -324,7 +355,7 @@ async function loadFavs(gen){
 }
 async function connect(){
   var gen=++S.gen;stopSync();
-  S.items=[];S.favs=[];S.ready=false;S.slow=false;S.local=false;S.offline=false;S.canWrite=true;
+  S.items=[];S.favs=[];S.hist=null;S.histLoading=false;S.histErr=false;S.hq={};S.ready=false;S.slow=false;S.local=false;S.offline=false;S.canWrite=true;
   if(S.demo){S.local=true;S.items=demoItems();S.ready=true;render();return;}
   if(!sb){S.offline=true;S.ready=true;render();return;}
   slowTimer=setTimeout(function(){ if(!S.ready){S.slow=true;render();} },10000);
@@ -728,7 +759,7 @@ function render(){
 }
 function renderTabs(){
   var tb=document.getElementById('tabs');if(!tb)return;tb.replaceChildren();
-  function tab(id,label){return h('button',{type:'button',class:'tab','aria-pressed':String(S.tab===id),onclick:function(){S.tab=id;S.csvText=null;render();}},label);}
+  function tab(id,label){return h('button',{type:'button',class:'tab','aria-pressed':String(S.tab===id),onclick:function(){S.tab=id;S.csvText=null;render();if(id==='history')loadHistory();}},label);}
   tb.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')),h('div',{class:'sp'}));
   if(isLead()&&S.tab==='today'){
     function vb(v,l){return h('button',{type:'button','aria-pressed':String(S.view===v),onclick:function(){S.view=v;render();}},l);}
@@ -852,23 +883,29 @@ async function saveCsv(){
   }catch(e){S.csvText=txt;render();}
 }
 
-/* history */
+/* history: flat list of every item in the project. Pick a quantity (starts at 1) and add it to today's order. */
 function renderHistory(){
-  var d=today(),src=S.items.filter(function(i){return i.date<d&&(isLead()||i.by===S.session.name);});
-  var days={};src.forEach(function(i){(days[i.date]=days[i.date]||[]).push(i);});
-  var keys=Object.keys(days).sort().reverse().slice(0,7);
-  if(!keys.length)return emptyState(t('noHistory'),t('noHistoryP'));
-  var wrap=h('div');
-  keys.forEach(function(k){
-    var gs=sortGroups(groups(days[k])),box=h('div',{class:'person'});
-    gs.forEach(function(g){
-      box.append(h('div',{class:'line'},h('span',{class:'q'},'×'+g.qty),h('span',{class:'t'},g.text),
-        isLead()?h('span',{class:'meta',style:'margin:0'},byPerson(g).map(function(p){return p.by;}).join(', ')):null,
-        S.canWrite?h('button',{type:'button',class:'sq','aria-label':t('addAgain'),title:t('addAgain'),onclick:function(){addItem(g.text,isLead()?Math.max(1,Math.round(g.qty/g.entries.length)):g.qty);}},icon('plus')):null));
-    });
-    wrap.append(h('div',{class:'day'},h('h3',null,dayLabel(k),h('span',null,gs.length+' '+t('itemsN').toLowerCase())),box));
+  if(!S.hist){
+    if(S.histErr)return emptyState(t('errServer'),'');
+    if(S.histLoading)return h('p',{class:'hint',role:'status'},t('histLoading'));
+  }
+  if(!S.hist||!S.hist.length)return emptyState(t('noHistory'),t('noHistoryP'));
+  var box=h('div',{class:'person'});
+  S.hist.forEach(function(x){
+    var out=h('output',null,String(S.hq[x.key]||1));
+    function set(n){S.hq[x.key]=Math.max(1,Math.min(999,n));out.textContent=S.hq[x.key];}
+    function add(){
+      var q=S.hq[x.key]||1;S.hq[x.key]=1;out.textContent='1';
+      addItem(x.text,q,x.article);
+    }
+    box.append(h('div',{class:'line'},
+      h('button',{type:'button',class:'t',style:'text-align:left',disabled:!S.canWrite||null,onclick:add},x.text),
+      h('div',{class:'mini',role:'group','aria-label':'Quantity'},
+        h('button',{type:'button','aria-label':'−',onclick:function(){set((S.hq[x.key]||1)-1);}},icon('minus')),out,
+        h('button',{type:'button','aria-label':'+',onclick:function(){set((S.hq[x.key]||1)+1);}},icon('plus'))),
+      S.canWrite?h('button',{type:'button',class:'sq','aria-label':t('addAgain'),title:t('addAgain'),onclick:add},icon('plus')):null));
   });
-  return wrap;
+  return box;
 }
 
 /* ---------- boot ---------- */
