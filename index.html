@@ -398,14 +398,14 @@ async function connect(){
 /* ---------- suppliers ----------
    Presets (company null) are shared by all companies; own suppliers belong to the company and are edited by its leads.
    A supplier is a name plus a search link where {q} is replaced by the article number or search word. */
-function mapSup(r){return {id:r.id,co:r.company_id||null,name:r.name,url:r.search_url,sort:r.sort};}
+function mapSup(r){return {id:r.id,co:r.company_id||null,name:r.name,url:r.search_url,sort:r.sort,hidden:!!r.is_hidden};}
 function sortSups(a){return a.slice().sort(function(x,y){
   return ((x.co?1:0)-(y.co?1:0))||((x.sort||0)-(y.sort||0))||x.name.localeCompare(y.name,lang);});}
 async function loadSuppliers(gen){
   if(!S.session||S.demo||!sb)return;
   if(gen===undefined)gen=S.gen;
   try{
-    var r=await sb.from('suppliers').select('id,company_id,name,search_url,sort').order('sort').order('name');
+    var r=await sb.from('suppliers').select('id,company_id,name,search_url,sort,is_hidden').order('sort').order('name');
     if(gen!==S.gen)return;
     if(r.error)throw r.error;
     S.sups=sortSups(r.data.map(mapSup));
@@ -972,7 +972,7 @@ function supSelect(g){
   var sel=h('select',{class:'sel','aria-label':t('supplierFor')+' '+g.text,disabled:!S.canWrite||null,
     onchange:function(){setForGroup(g,{supplier_id:sel.value||null});}});
   sel.append(h('option',{value:''},d?t('useDefault')+': '+d.name:t('useDefault')));
-  S.sups.forEach(function(x){sel.append(h('option',{value:x.id},x.name));});
+  S.sups.forEach(function(x){if(x.hidden&&!(cur&&cur.id===x.id))return;sel.append(h('option',{value:x.id},x.name));});
   sel.value=cur?cur.id:'';
   return sel;
 }
@@ -1061,7 +1061,7 @@ function renderSuppliers(){
   var wrap=h('div');
   wrap.append(h('p',{class:'hint',style:'margin:0 0 14px'},t('supHint')));
   var list=h('div',{class:'list'});
-  S.sups.forEach(function(x){list.append(supCard(x));});
+  S.sups.forEach(function(x){if(x.hidden&&S.defaultId!==x.id)return;list.append(supCard(x));});
   wrap.append(list,supForm());
   return wrap;
 }
