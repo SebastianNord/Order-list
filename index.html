@@ -900,6 +900,7 @@ function renderHistory(){
     }
     box.append(h('div',{class:'line'},
       h('button',{type:'button',class:'t',style:'text-align:left',disabled:!S.canWrite||null,onclick:add},x.text),
+      x.article?h('span',{class:'pill art'},x.article):null,
       h('div',{class:'mini',role:'group','aria-label':'Quantity'},
         h('button',{type:'button','aria-label':'−',onclick:function(){set((S.hq[x.key]||1)-1);}},icon('minus')),out,
         h('button',{type:'button','aria-label':'+',onclick:function(){set((S.hq[x.key]||1)+1);}},icon('plus'))),
