@@ -312,7 +312,7 @@ function newId(){return 'l'+Math.random().toString(36).slice(2,10);}
 var pollTimer=null,refetchT=null,channel=null;
 function stopSync(){
   unsubs.forEach(function(u){try{u();}catch(e){}});unsubs=[];
-  clearTimeout(slowTimer);clearTimeout(refetchT);clearInterval(pollTimer);
+  clearTimeout(slowTimer);clearTimeout(refetchT);clearTimeout(rtT);clearInterval(pollTimer);
   if(channel&&sb){try{sb.removeChannel(channel);}catch(e){}}channel=null;
 }
 function mapRow(r){return {id:r.id,pid:r.project_id,date:r.day,text:r.text,key:r.key,qty:r.qty,by:r.by_name,at:r.created_at,late:r.late,article:r.article||'',ordered:r.ordered,sup:r.supplier_id||null};}
@@ -322,11 +322,28 @@ async function ensureAuth(){
   if(!ses){var r=await sb.auth.signInAnonymously();if(r.error)throw r.error;ses=r.data.session;}
   S.uid=ses.user.id;return ses;
 }
+var ITEM_COLS='id,project_id,day,text,key,qty,by_name,created_at,late,article,ordered,supplier_id';
+/* realtime: apply the changed row directly instead of refetching everything */
+var rtT=null;
+function applyRt(p,gen){
+  if(gen!==S.gen||!S.session||S.demo)return;
+  try{
+    if(p.eventType==='DELETE'){
+      var id=p.old&&p.old.id;if(!id){refetch(gen);return;}
+      S.items=S.items.filter(function(x){return x.id!==id;});
+    }else if(p.new&&p.new.id&&p.new.project_id===S.session.pid){
+      var row=mapRow(p.new),i=S.items.findIndex(function(x){return x.id===row.id;});
+      if(i<0)S.items.push(row);else S.items[i]=row;
+      S.items.sort(function(a,b){return (a.at||'').localeCompare(b.at||'');});
+    }else{refetch(gen);return;}
+    clearTimeout(rtT);rtT=setTimeout(render,100);
+  }catch(e){refetch(gen);}
+}
 async function refetch(gen){
   if(S.demo||!S.session||!sb)return;
   var pid=S.session.pid,co=S.session.co,since=dstr(new Date(Date.now()-8*864e5));
   try{
-    var a=await sb.from('items').select('*').eq('company_id',co).eq('project_id',pid).gte('day',since).order('created_at',{ascending:true}).limit(1000);
+    var a=await sb.from('items').select(ITEM_COLS).eq('company_id',co).eq('project_id',pid).gte('day',since).order('created_at',{ascending:true}).limit(1000);
     if(gen!==S.gen)return;
     if(a.error)throw a.error;
     S.items=a.data.map(mapRow);S.ready=true;S.slow=false;clearTimeout(slowTimer);
@@ -393,9 +410,7 @@ async function connect(){
   }catch(e){ if(gen!==S.gen)return; S.ready=true;S.slow=true;render();return; }
   var pid=S.session.pid;
   /* realtime filters take one column; other companies' rows are blocked by RLS, so project_id is enough */
-  channel=sb.channel('items-'+S.session.co+'-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(){
-    clearTimeout(refetchT);refetchT=setTimeout(function(){refetch(gen);},150);
-  }).subscribe();
+  channel=sb.channel('items-'+S.session.co+'-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(p){applyRt(p,gen);}).subscribe();
   pollTimer=setInterval(function(){refetch(gen);loadSuppliers(gen);},30000);
   await refetch(gen);loadFavs(gen);loadSuppliers(gen);
 }
@@ -608,6 +623,7 @@ function qtyBox(article,qty){
   img.onload=function(){imgState[art]=true;show(img);};
   img.onerror=function(){imgState[art]=false;};
   img.src=IMG_BASE+encodeURIComponent(art)+'/MEDIUM';
+  if(imgState[art]===true)show(img); /* seen before: browser has it cached, so no flicker on re-render */
   return box;
 }
 function hhmm(iso){var d=new Date(iso);return isNaN(d)?'':pad(d.getHours())+':'+pad(d.getMinutes());}
