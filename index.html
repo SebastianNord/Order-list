@@ -193,6 +193,13 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .form .alt{color:var(--accent);font-weight:600;text-align:center;padding:4px;text-decoration:underline;text-underline-offset:3px}
 .err{color:var(--danger);font-size:13px;font-weight:500;min-height:1em}
 .hint{font-size:13px;color:var(--muted);margin:0;text-transform:none;letter-spacing:0;font-weight:400}
+.sel{max-width:190px;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px;font-size:13px}
+.sel:focus{outline:none;border-color:var(--accent)}
+.sel:disabled,.btn:disabled,.ord:disabled{opacity:.5;cursor:not-allowed}
+.supchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.supchips button{padding:7px 14px;border-radius:999px;background:var(--surface2);font-weight:600;font-size:13px}
+.supchips button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.form.supform{box-shadow:var(--shadow);margin-top:20px;max-width:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:520px){.acts{margin-left:0;width:100%}.card{padding:14px}}
 </style>
@@ -248,14 +255,18 @@ var T={
   edit:'Change',today:'Today',orderTab:'Order',history:'History',byItem:'By item',byPerson:'By person',leave:'Leave project',
   emptyMine:'Your list is empty',emptyMineP:'Type what you need above, for example “Wago 221-413 ×20”. The lead sees it right away.',
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
-  rexel:'Find on Rexel',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
+  article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
   copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
   nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
   addedToast:'Added',removed:'Removed',errWrite:'Could not save. Try again.',copyManual:'Select the text and copy it:',you:'you',by:'by',
   fav:'Favorite',favs:'Favorites',noCsv:'Nothing to export yet.',delAll:'Delete for everyone',delSure:'Tap again to delete',delOne:'Remove request',leadCode:'Lead code',leadCodeHint:'New project? Choose a code of at least 4 characters and share it only with other leads. Existing project? Enter its code.',codePh:'Your secret lead code',needCode:'Enter the lead code (at least 4 characters).',errNoProject:'No project with that ID. Ask your lead to create it first.',errWrongCode:'Wrong lead code for this project.',errServer:'Could not reach the server. Check your connection and try again.',rejoin:'Please join the project again.',
-  company:'Company',companyPh:'Search name or org. number',noMatch:'No match. Add the company below.',addCompany:'Company not listed? Add it',orgNr:'Org. no.',orgLabel:'Organisation number',orgPh:'e.g. 556012-5790',coName:'Company name',coNamePh:'e.g. Nord Elinstallation AB',saveCompany:'Add company',alreadyAdded:'Already added. Tap to use it:',needCompany:'Choose your company.',errOrg:'That organisation number is not valid. Check the 10 digits.',errPersonal:'Organisation numbers that start like a personal number (sole traders) are not supported.',errCoName:'Enter the company name (2 to 60 characters).',coExists:'That company was already added. Selected it.',errNoCompany:'Company not found. Choose or add it first.'},
+  company:'Company',companyPh:'Search name or org. number',noMatch:'No match. Add the company below.',addCompany:'Company not listed? Add it',orgNr:'Org. no.',orgLabel:'Organisation number',orgPh:'e.g. 556012-5790',coName:'Company name',coNamePh:'e.g. Nord Elinstallation AB',saveCompany:'Add company',alreadyAdded:'Already added. Tap to use it:',needCompany:'Choose your company.',errOrg:'That organisation number is not valid. Check the 10 digits.',errPersonal:'Organisation numbers that start like a personal number (sole traders) are not supported.',errCoName:'Enter the company name (2 to 60 characters).',coExists:'That company was already added. Selected it.',errNoCompany:'Company not found. Choose or add it first.',
+  suppliers:'Suppliers',supHint:'Pick the default supplier for this project. Items you do not tag yourself use it.',setDefault:'Make default',defaultPill:'Default',own:'Own',supDelete:'Delete supplier',supDeleteSure:'Tap again to delete',
+  supAdd:'Add your own supplier',supEditTitle:'Change supplier',supName:'Supplier name',supNamePh:'e.g. Elgrossisten',supUrl:'Search link',supUrlPh:'https://www.example.se/search?q={q}',supUrlHint:'Use {q} where the article number or search word goes. You confirm each match by hand.',
+  supSave:'Save supplier',supCancel:'Cancel',needSupName:'Enter a supplier name (2 to 40 characters).',errSupUrl:'The link must start with https:// and contain {q}.',supDup:'You already have a supplier with that name.',supSaved:'Supplier saved',supDeleted:'Supplier deleted',
+  pickDefault:'Choose a default supplier for this project before ordering.',pickDefaultBtn:'Choose supplier',findAt:'Find at',useDefault:'Default',supplierFor:'Supplier for',allSup:'All suppliers',noSup:'No supplier'},
  sv:{tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
@@ -263,21 +274,26 @@ var T={
   edit:'Ändra',today:'Idag',orderTab:'Beställ',history:'Historik',byItem:'Per artikel',byPerson:'Per person',leave:'Lämna projektet',
   emptyMine:'Din lista är tom',emptyMineP:'Skriv vad du behöver ovan, till exempel ”Wago 221-413 ×20”. Ledaren ser det direkt.',
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
-  rexel:'Hitta hos Rexel',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
+  article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
   copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
   nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
   addedToast:'Tillagd',removed:'Borttagen',errWrite:'Kunde inte spara. Försök igen.',copyManual:'Markera texten och kopiera:',you:'du',by:'av',
   fav:'Favorit',favs:'Favoriter',noCsv:'Inget att exportera än.',delAll:'Ta bort för alla',delSure:'Tryck igen för att ta bort',delOne:'Ta bort rad',leadCode:'Ledarkod',leadCodeHint:'Nytt projekt? Välj en kod på minst 4 tecken och dela den bara med andra ledare. Finns projektet? Skriv dess kod.',codePh:'Din hemliga ledarkod',needCode:'Skriv ledarkoden (minst 4 tecken).',errNoProject:'Inget projekt med det ID:t. Be din ledare skapa det först.',errWrongCode:'Fel ledarkod för det här projektet.',errServer:'Kunde inte nå servern. Kontrollera uppkopplingen och försök igen.',rejoin:'Gå med i projektet igen.',
-  company:'Företag',companyPh:'Sök namn eller org.nr',noMatch:'Ingen träff. Lägg till företaget nedan.',addCompany:'Saknas företaget? Lägg till det',orgNr:'Org.nr',orgLabel:'Organisationsnummer',orgPh:'t.ex. 556012-5790',coName:'Företagsnamn',coNamePh:'t.ex. Nord Elinstallation AB',saveCompany:'Lägg till företag',alreadyAdded:'Finns redan. Tryck för att välja:',needCompany:'Välj ditt företag.',errOrg:'Organisationsnumret är inte giltigt. Kontrollera de 10 siffrorna.',errPersonal:'Organisationsnummer som börjar som ett personnummer (enskild firma) stöds inte.',errCoName:'Skriv företagsnamnet (2 till 60 tecken).',coExists:'Företaget fanns redan. Det är valt.',errNoCompany:'Företaget hittades inte. Välj eller lägg till det först.'}
+  company:'Företag',companyPh:'Sök namn eller org.nr',noMatch:'Ingen träff. Lägg till företaget nedan.',addCompany:'Saknas företaget? Lägg till det',orgNr:'Org.nr',orgLabel:'Organisationsnummer',orgPh:'t.ex. 556012-5790',coName:'Företagsnamn',coNamePh:'t.ex. Nord Elinstallation AB',saveCompany:'Lägg till företag',alreadyAdded:'Finns redan. Tryck för att välja:',needCompany:'Välj ditt företag.',errOrg:'Organisationsnumret är inte giltigt. Kontrollera de 10 siffrorna.',errPersonal:'Organisationsnummer som börjar som ett personnummer (enskild firma) stöds inte.',errCoName:'Skriv företagsnamnet (2 till 60 tecken).',coExists:'Företaget fanns redan. Det är valt.',errNoCompany:'Företaget hittades inte. Välj eller lägg till det först.',
+  suppliers:'Leverantörer',supHint:'Välj standardleverantör för det här projektet. Rader du inte själv markerar använder den.',setDefault:'Gör till standard',defaultPill:'Standard',own:'Egen',supDelete:'Ta bort leverantör',supDeleteSure:'Tryck igen för att ta bort',
+  supAdd:'Lägg till egen leverantör',supEditTitle:'Ändra leverantör',supName:'Leverantörens namn',supNamePh:'t.ex. Elgrossisten',supUrl:'Söklänk',supUrlPh:'https://www.exempel.se/sok?q={q}',supUrlHint:'Skriv {q} där artikelnumret eller sökordet ska in. Du bekräftar varje träff själv.',
+  supSave:'Spara leverantör',supCancel:'Avbryt',needSupName:'Skriv leverantörens namn (2 till 40 tecken).',errSupUrl:'Länken måste börja med https:// och innehålla {q}.',supDup:'Du har redan en leverantör med det namnet.',supSaved:'Leverantören sparades',supDeleted:'Leverantören togs bort',
+  pickDefault:'Välj en standardleverantör för projektet innan du beställer.',pickDefaultBtn:'Välj leverantör',findAt:'Hitta hos',useDefault:'Standard',supplierFor:'Leverantör för',allSup:'Alla leverantörer',noSup:'Ingen leverantör'}
 };
 var lang=ls('ol.lang')||((navigator.language||'').slice(0,2)==='sv'?'sv':'en');
 function t(k){return (T[lang]&&T[lang][k])||T.en[k]||k;}
 
 /* ---------- state ---------- */
 var S={session:null,items:[],favs:[],cutoff:'15:00',tab:'today',view:'item',ready:false,local:false,demo:false,offline:false,
-  canWrite:true,slow:false,gen:0,dirty:false,editCut:false,csvText:null,db:null,confirm:null,uid:null};
+  canWrite:true,slow:false,gen:0,dirty:false,editCut:false,csvText:null,db:null,confirm:null,uid:null,
+  sups:[],defaultId:null,supFilter:'all',supEdit:null};
 var unsubs=[],slowTimer=null,tick=null,busy={};
 var app=document.getElementById('app');
 var CFG=window.APP_CONFIG||{};var sb=null;
@@ -294,7 +310,7 @@ function stopSync(){
   clearTimeout(slowTimer);clearTimeout(refetchT);clearInterval(pollTimer);
   if(channel&&sb){try{sb.removeChannel(channel);}catch(e){}}channel=null;
 }
-function mapRow(r){return {id:r.id,pid:r.project_id,date:r.day,text:r.text,key:r.key,qty:r.qty,by:r.by_name,at:r.created_at,late:r.late,article:r.article||'',ordered:r.ordered};}
+function mapRow(r){return {id:r.id,pid:r.project_id,date:r.day,text:r.text,key:r.key,qty:r.qty,by:r.by_name,at:r.created_at,late:r.late,article:r.article||'',ordered:r.ordered,sup:r.supplier_id||null};}
 async function ensureAuth(){
   var g=await sb.auth.getSession();
   var ses=g.data&&g.data.session;
@@ -309,8 +325,9 @@ async function refetch(gen){
     if(gen!==S.gen)return;
     if(a.error)throw a.error;
     S.items=a.data.map(mapRow);S.ready=true;S.slow=false;clearTimeout(slowTimer);
-    var p=await sb.from('projects').select('cutoff').eq('company_id',co).eq('id',pid).maybeSingle();
+    var p=await sb.from('projects').select('cutoff,default_supplier_id').eq('company_id',co).eq('id',pid).maybeSingle();
     if(gen!==S.gen)return;
+    if(p.data){S.defaultId=p.data.default_supplier_id||null;}
     if(p.data&&p.data.cutoff&&!S.editCut){S.cutoff=String(p.data.cutoff).slice(0,5);updateCut();}
     render();
   }catch(e){ if(gen!==S.gen)return; S.ready=true;S.slow=true;render(); }
@@ -356,7 +373,8 @@ async function loadFavs(gen){
 async function connect(){
   var gen=++S.gen;stopSync();
   S.items=[];S.favs=[];S.hist=null;S.histLoading=false;S.histErr=false;S.hq={};S.ready=false;S.slow=false;S.local=false;S.offline=false;S.canWrite=true;
-  if(S.demo){S.local=true;S.items=demoItems();S.ready=true;render();return;}
+  S.sups=[];S.defaultId=null;S.supFilter='all';S.supEdit=null;
+  if(S.demo){S.local=true;S.items=demoItems();S.sups=demoSuppliers();S.ready=true;render();return;}
   if(!sb){S.offline=true;S.ready=true;render();return;}
   slowTimer=setTimeout(function(){ if(!S.ready){S.slow=true;render();} },10000);
   try{
@@ -373,8 +391,89 @@ async function connect(){
   channel=sb.channel('items-'+S.session.co+'-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(){
     clearTimeout(refetchT);refetchT=setTimeout(function(){refetch(gen);},150);
   }).subscribe();
-  pollTimer=setInterval(function(){refetch(gen);},30000);
-  await refetch(gen);loadFavs(gen);
+  pollTimer=setInterval(function(){refetch(gen);loadSuppliers(gen);},30000);
+  await refetch(gen);loadFavs(gen);loadSuppliers(gen);
+}
+
+/* ---------- suppliers ----------
+   Presets (company null) are shared by all companies; own suppliers belong to the company and are edited by its leads.
+   A supplier is a name plus a search link where {q} is replaced by the article number or search word. */
+function mapSup(r){return {id:r.id,co:r.company_id||null,name:r.name,url:r.search_url,sort:r.sort};}
+function sortSups(a){return a.slice().sort(function(x,y){
+  return ((x.co?1:0)-(y.co?1:0))||((x.sort||0)-(y.sort||0))||x.name.localeCompare(y.name,lang);});}
+async function loadSuppliers(gen){
+  if(!S.session||S.demo||!sb)return;
+  if(gen===undefined)gen=S.gen;
+  try{
+    var r=await sb.from('suppliers').select('id,company_id,name,search_url,sort').order('sort').order('name');
+    if(gen!==S.gen)return;
+    if(r.error)throw r.error;
+    S.sups=sortSups(r.data.map(mapSup));
+    if(S.supEdit&&!supById(S.supEdit))S.supEdit=null;
+    render();
+  }catch(e){}
+}
+function supById(id){return id?(S.sups.find(function(x){return x.id===id;})||null):null;}
+function supUrl(sup,text){return sup.url.split('{q}').join(encodeURIComponent(text));}
+function supHost(u){try{return new URL(u.split('{q}').join('x')).hostname.replace(/^www\./,'');}catch(e){return '';}}
+/* the supplier the lead tagged for this merged item (first tagged entry wins), else the project default */
+function groupSup(g){for(var i=0;i<g.entries.length;i++){var s=supById(g.entries[i].sup);if(s)return s;}return null;}
+function effSup(g){return groupSup(g)||supById(S.defaultId);}
+function supValid(name,url){
+  if(name.length<2||name.length>40)return 'needSupName';
+  if(!/^https:\/\//.test(url)||url.indexOf('{q}')<0||url.length>300)return 'errSupUrl';
+  return '';
+}
+async function setDefault(id){
+  S.defaultId=id;render();
+  if(S.local)return;
+  try{
+    var r=await sb.from('projects').update({default_supplier_id:id}).eq('company_id',S.session.co).eq('id',S.session.pid);
+    if(r.error)throw r.error;
+  }catch(e){toast(t('errWrite'));refetch(S.gen);}
+}
+async function saveSupplier(id,name,url){
+  name=(name||'').trim();url=(url||'').trim();
+  var bad=supValid(name,url);if(bad){toast(t(bad));return;}
+  var dup=S.sups.some(function(x){return x.id!==id&&x.co===(S.session.co)&&norm(x.name)===norm(name);});
+  if(dup){toast(t('supDup'));return;}
+  try{
+    if(S.local){
+      if(id){var x=supById(id);if(x){x.name=name;x.url=url;}}
+      else S.sups.push({id:newId(),co:S.session.co,name:name,url:url,sort:200});
+      S.sups=sortSups(S.sups);
+    }else{
+      var r=id?await sb.from('suppliers').update({name:name,search_url:url}).eq('id',id)
+              :await sb.from('suppliers').insert({company_id:S.session.co,name:name,search_url:url,sort:200});
+      if(r.error){toast(r.error.code==='23505'?t('supDup'):t('errWrite'));return;}
+      await loadSuppliers();
+    }
+    S.supEdit=null;toast(t('supSaved'));
+    try{document.activeElement.blur();}catch(e2){}
+    render();
+  }catch(e){toast(t('errWrite'));}
+}
+async function deleteSupplier(id){
+  S.confirm=null;
+  try{
+    if(!S.local){
+      var r=await sb.from('suppliers').delete().eq('id',id);
+      if(r.error){toast(t('errWrite'));return;}
+    }
+    S.sups=S.sups.filter(function(x){return x.id!==id;});
+    if(S.defaultId===id)S.defaultId=null;
+    S.items.forEach(function(i){if(i.sup===id)i.sup=null;});
+    if(S.supFilter===id)S.supFilter='all';
+    if(S.supEdit===id)S.supEdit=null;
+    toast(t('supDeleted'));render();
+    if(!S.local)refetch(S.gen);
+  }catch(e){toast(t('errWrite'));}
+}
+function askDeleteSup(id){
+  var k='s:'+id;
+  if(S.confirm===k){deleteSupplier(id);return;}
+  S.confirm=k;render();clearTimeout(askDeleteSup.t);
+  askDeleteSup.t=setTimeout(function(){if(S.confirm===k){S.confirm=null;render();}},4000);
 }
 
 async function addItem(text,qty,article){
@@ -397,7 +496,9 @@ async function addItem(text,qty,article){
 async function patch(id,data){
   if(busy[id])return;busy[id]=1;
   try{
-    var it=S.items.find(function(i){return i.id===id;});if(it)Object.assign(it,data);render();
+    var it=S.items.find(function(i){return i.id===id;});
+    if(it){var loc=Object.assign({},data);if('supplier_id' in loc){loc.sup=loc.supplier_id;delete loc.supplier_id;}Object.assign(it,loc);}
+    render();
     if(!S.local){
       var r=await sb.from('items').update(data).eq('id',id);
       if(r.error){toast(t('errWrite'));refetch(S.gen);}
@@ -445,6 +546,10 @@ async function setCutoff(v){
 async function setForGroup(g,data){ for(var i=0;i<g.entries.length;i++){ await patch(g.entries[i].id,data); } }
 
 /* demo data: made-up colleagues, kept in memory only */
+function demoSuppliers(){
+  function g(n,s,o){return {id:'dsup'+o,co:null,name:n,url:'https://www.google.com/search?q=site:'+s+'+{q}',sort:o};}
+  return [g('Rexel','rexel.se',10),g('Ahlsell','ahlsell.se',20),g('Dahl','dahl.se',30)];
+}
 function demoItems(){
   var d=today(),y=dstr(new Date(Date.now()-864e5)),p='DEMO',n=0;
   function mk(date,by,text,qty,o){o=o||{};return Object.assign({id:'demo'+(n++),pid:p,date:date,text:text,key:norm(text),qty:qty,by:by,at:date+'T0'+(7+n%3)+':'+pad(10+n*4)+':00',late:false,article:'',ordered:false},o);}
@@ -486,7 +591,7 @@ function groups(items){
 }
 function byPerson(g){var m={},o=[];g.entries.forEach(function(e){if(!m[e.by]){m[e.by]={by:e.by,qty:0};o.push(m[e.by]);}m[e.by].qty+=(+e.qty||1);});return o;}
 function sortGroups(gs){return gs.slice().sort(function(a,b){return (a.ordered-b.ordered)||a.text.localeCompare(b.text,lang);});}
-function rexelUrl(text){return 'https://www.google.com/search?q='+encodeURIComponent('site:rexel.se '+text);}
+function findLink(sup,text){return sup?h('a',{class:'lnk',href:supUrl(sup,text),target:'_blank',rel:'noopener noreferrer'},icon('ext'),t('findAt')+' '+sup.name):null;}
 function hhmm(iso){var d=new Date(iso);return isNaN(d)?'':pad(d.getHours())+':'+pad(d.getMinutes());}
 function dayLabel(ds){return new Date(ds+'T12:00:00').toLocaleDateString(lang==='sv'?'sv-SE':'en-GB',{weekday:'long',day:'numeric',month:'short'});}
 
@@ -748,19 +853,28 @@ function renderFavs(){
 
 function render(){
   if(!S.session)return;
-  var ae=document.activeElement;
-  if(ae&&ae.classList&&ae.classList.contains('art')){S.dirty=true;return;}
+  if(typing()){S.dirty=true;return;}
   renderTabs();renderBanner();
   var c=document.getElementById('content');if(!c)return;
   var body;
-  if(S.tab==='history')body=renderHistory();
+  if(S.tab==='suppliers'&&isLead())body=renderSuppliers();
+  else if(S.tab==='history')body=renderHistory();
   else body=isLead()?renderLead():renderMine();
   c.replaceChildren(body);
 }
+/* true while someone is typing in an article box or the supplier form, so a refresh does not wipe it */
+function typing(){
+  var a=document.activeElement;
+  if(!a||!a.classList)return false;
+  if(a.classList.contains('art'))return true;
+  return !!(a.matches&&a.matches('input,textarea')&&a.closest&&a.closest('.supform'));
+}
 function renderTabs(){
   var tb=document.getElementById('tabs');if(!tb)return;tb.replaceChildren();
-  function tab(id,label){return h('button',{type:'button',class:'tab','aria-pressed':String(S.tab===id),onclick:function(){S.tab=id;S.csvText=null;render();if(id==='history')loadHistory();}},label);}
-  tb.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')),h('div',{class:'sp'}));
+  function tab(id,label){return h('button',{type:'button',class:'tab','aria-pressed':String(S.tab===id),onclick:function(){S.tab=id;S.csvText=null;render();if(id==='history')loadHistory();if(id==='suppliers')loadSuppliers();}},label);}
+  tb.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')));
+  if(isLead())tb.append(tab('suppliers',t('suppliers')));
+  tb.append(h('div',{class:'sp'}));
   if(isLead()&&S.tab==='today'){
     function vb(v,l){return h('button',{type:'button','aria-pressed':String(S.view===v),onclick:function(){S.view=v;render();}},l);}
     tb.append(h('div',{class:'seg',role:'group'},vb('item',t('byItem')),vb('person',t('byPerson'))));
@@ -797,8 +911,8 @@ function renderMine(){
     if(!it.ordered&&S.canWrite)acts.append(h('div',{class:'mini',role:'group'},
       h('button',{type:'button','aria-label':'−',onclick:function(){if(it.qty>1)patch(it.id,{qty:it.qty-1});}},icon('minus')),h('output',null,String(it.qty)),
       h('button',{type:'button','aria-label':'+',onclick:function(){patch(it.id,{qty:Math.min(999,it.qty+1)});}},icon('plus'))));
-    acts.append(h('a',{class:'lnk',href:rexelUrl(it.text),target:'_blank',rel:'noopener noreferrer'},icon('ext'),t('rexel')),
-      h('button',{type:'button',class:'sq'+(isFav(it.text)?' on':''),'aria-label':t('fav'),'aria-pressed':String(isFav(it.text)),title:t('fav'),onclick:function(){toggleFav(it.text);render();}},icon('star')));
+    var fl=findLink(supById(S.defaultId),it.text);if(fl)acts.append(fl);
+    acts.append(h('button',{type:'button',class:'sq'+(isFav(it.text)?' on':''),'aria-label':t('fav'),'aria-pressed':String(isFav(it.text)),title:t('fav'),onclick:function(){toggleFav(it.text);render();}},icon('star')));
     if(!it.ordered&&S.canWrite)acts.append(h('button',{type:'button',class:'sq del','aria-label':'Delete',onclick:function(){remove(it.id);}},icon('trash')));
     list.append(h('div',{class:'card'+(it.ordered?' done':'')+(recent(it)?' fresh':'')},h('div',{class:'qty'},'×'+it.qty),h('div',{class:'main'},h('div',{class:'title'},it.text),meta),acts));
   });
@@ -806,33 +920,63 @@ function renderMine(){
 }
 
 /* lead: merged order view */
+function supKey(g){var s=effSup(g);return s?s.id:'none';}
+function inFilter(g){return S.view==='person'||S.supFilter==='all'||supKey(g)===S.supFilter;}
 function renderLead(){
-  var all=todays(),gs=sortGroups(groups(all));
+  var all=todays(),allG=sortGroups(groups(all));
   var wrap=h('div');
-  var people=new Set(all.map(function(i){return i.by;})).size,pending=gs.filter(function(g){return !g.ordered;}).length;
+  var needDef=!S.defaultId;
+  var people=new Set(all.map(function(i){return i.by;})).size,pendingAll=allG.filter(function(g){return !g.ordered;}).length;
   wrap.append(h('div',{class:'tiles'},
-    tile(gs.length,t('itemsN')),tile(people,t('peopleN')),tile(pending,t('pendingN')),tile(gs.length-pending,t('orderedN'))));
-  if(!gs.length){wrap.append(emptyState(t('emptyLead'),t('emptyLeadP')));return wrap;}
+    tile(allG.length,t('itemsN')),tile(people,t('peopleN')),tile(pendingAll,t('pendingN')),tile(allG.length-pendingAll,t('orderedN'))));
+  if(needDef)wrap.append(h('div',{class:'banner'},icon('info'),h('div',null,t('pickDefault')),
+    h('button',{type:'button',class:'btn',style:'margin-left:auto',onclick:function(){S.tab='suppliers';render();}},t('pickDefaultBtn'))));
+  if(!allG.length){wrap.append(emptyState(t('emptyLead'),t('emptyLeadP')));return wrap;}
+  /* one chip per supplier in use today, with how many items are still to order */
+  var by={},kinds=[];
+  allG.forEach(function(g){
+    var s=effSup(g),k=s?s.id:'none';
+    if(!by[k]){by[k]={id:k,name:s?s.name:t('noSup'),n:0};kinds.push(by[k]);}
+    if(!g.ordered)by[k].n++;
+  });
+  if(S.supFilter!=='all'&&!by[S.supFilter])S.supFilter='all';
+  var gs=allG.filter(inFilter),pending=gs.filter(function(g){return !g.ordered;}).length;
   if(S.view==='person')wrap.append(renderPeople(all));
   else{
+    if(kinds.length>1){
+      function chip(id,label,n){return h('button',{type:'button','aria-pressed':String(S.supFilter===id),onclick:function(){S.supFilter=id;S.csvText=null;render();}},label+' · '+n);}
+      var row=h('div',{class:'supchips',role:'group','aria-label':t('suppliers')},chip('all',t('allSup'),pendingAll));
+      kinds.forEach(function(k){row.append(chip(k.id,k.name,k.n));});
+      wrap.append(row);
+    }
     var list=h('div',{class:'list'});
-    gs.forEach(function(g){list.append(groupCard(g));});
+    gs.forEach(function(g){list.append(groupCard(g,needDef));});
     wrap.append(list);
   }
-  if(pending===0)wrap.append(h('div',{style:'margin-top:16px'},emptyState(t('allDone'),t('allDoneP'))));
+  if(pendingAll===0)wrap.append(h('div',{style:'margin-top:16px'},emptyState(t('allDone'),t('allDoneP'))));
   if(S.csvText!==null){
     var ta=h('textarea',{class:'csvbox',readonly:true,'aria-label':'CSV'});ta.value=S.csvText;
     wrap.append(h('div',{style:'margin-top:16px'},h('p',{class:'hint'},t('copyManual')),ta));
     setTimeout(function(){try{ta.focus();ta.select();}catch(e){}},0);
   }
   wrap.append(h('div',{class:'foot'},h('div',{class:'grp'},
-    h('button',{type:'button',class:'btn',onclick:copyCsv},icon('copy'),t('copyCsv')),
-    h('button',{type:'button',class:'btn',onclick:saveCsv},icon('down'),t('saveCsv')),
-    h('button',{type:'button',class:'btn pri',disabled:(!S.canWrite||pending===0)||null,onclick:async function(){for(var i=0;i<gs.length;i++){if(!gs[i].ordered)await setForGroup(gs[i],{ordered:true});}}},icon('check'),t('markAll')))));
+    h('button',{type:'button',class:'btn',disabled:needDef||null,onclick:copyCsv},icon('copy'),t('copyCsv')),
+    h('button',{type:'button',class:'btn',disabled:needDef||null,onclick:saveCsv},icon('down'),t('saveCsv')),
+    h('button',{type:'button',class:'btn pri',disabled:(needDef||!S.canWrite||pending===0)||null,onclick:async function(){for(var i=0;i<gs.length;i++){if(!gs[i].ordered)await setForGroup(gs[i],{ordered:true});}}},icon('check'),t('markAll')))));
   return wrap;
 }
 function tile(n,l){return h('div',{class:'tile'},h('b',null,String(n)),h('span',null,l));}
-function groupCard(g){
+/* lead picks which supplier an item is ordered from; "Default" follows the project default */
+function supSelect(g){
+  var cur=groupSup(g),d=supById(S.defaultId);
+  var sel=h('select',{class:'sel','aria-label':t('supplierFor')+' '+g.text,disabled:!S.canWrite||null,
+    onchange:function(){setForGroup(g,{supplier_id:sel.value||null});}});
+  sel.append(h('option',{value:''},d?t('useDefault')+': '+d.name:t('useDefault')));
+  S.sups.forEach(function(x){sel.append(h('option',{value:x.id},x.name));});
+  sel.value=cur?cur.id:'';
+  return sel;
+}
+function groupCard(g,locked){
   var meta=h('div',{class:'meta'});
   byPerson(g).forEach(function(p){
     var ids=g.entries.filter(function(e){return e.by===p.by;}).map(function(e){return e.id;}),k='p:'+g.key+'|'+p.by,sure=S.confirm===k;
@@ -842,11 +986,11 @@ function groupCard(g){
   if(g.late)meta.append(h('span',{class:'pill late'},t('late')));
   var art=h('input',{class:'art',type:'text',value:g.article||'',placeholder:t('article'),'aria-label':t('article')+': '+g.text,maxlength:'30',disabled:!S.canWrite||null});
   art.addEventListener('change',function(){var v=art.value.trim();setForGroup(g,{article:v});});
-  var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:!S.canWrite||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
+  var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
   var kk='g:'+g.key,sureG=S.confirm===kk;
   var del=S.canWrite?h('button',{type:'button',class:'sq del'+(sureG?' sure':''),'aria-label':t('delAll'),title:t('delAll'),onclick:function(){askDelete(kk,g.entries.map(function(e){return e.id;}));}},sureG?t('delSure'):icon('trash')):null;
   return h('div',{class:'card'+(g.ordered?' done':'')+(g.entries.some(recent)?' fresh':'')},h('div',{class:'qty'},'×'+g.qty),h('div',{class:'main'},h('div',{class:'title'},g.text),meta),
-    h('div',{class:'acts'},art,h('a',{class:'lnk',href:rexelUrl(g.text),target:'_blank',rel:'noopener noreferrer'},icon('ext'),t('rexel')),ord,del));
+    h('div',{class:'acts'},art,supSelect(g),findLink(effSup(g),g.text),ord,del));
 }
 function renderPeople(all){
   var m={},o=[];all.forEach(function(i){if(!m[i.by]){m[i.by]=[];o.push(i.by);}m[i.by].push(i);});
@@ -862,10 +1006,11 @@ function renderPeople(all){
   return list;
 }
 function buildCsv(){
-  var gs=groups(todays()).filter(function(g){return !g.ordered;});
+  /* what is exported follows the supplier chip that is selected ("All" = everything still to order) */
+  var gs=groups(todays()).filter(function(g){return !g.ordered&&inFilter(g);});
   if(!gs.length)return null;
-  var rows=[['Artikelnr','Produkt','Antal','Beställare']];
-  gs.forEach(function(g){rows.push([g.article,g.text,g.qty,byPerson(g).map(function(p){return p.by+' '+p.qty;}).join(', ')]);});
+  var rows=[['Artikelnr','Produkt','Antal','Beställare','Leverantör']];
+  gs.forEach(function(g){var s=effSup(g);rows.push([g.article,g.text,g.qty,byPerson(g).map(function(p){return p.by+' '+p.qty;}).join(', '),s?s.name:'']);});
   return rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(';');}).join('\r\n');
 }
 async function copyCsv(){
@@ -877,7 +1022,8 @@ async function saveCsv(){
   var txt=buildCsv();if(txt===null){toast(t('noCsv'));return;}
   try{
     var url=URL.createObjectURL(new Blob(['\uFEFF'+txt],{type:'text/csv;charset=utf-8'}));
-    var a=document.createElement('a');a.href=url;a.download='order-'+today()+'.csv';
+    var fs=S.supFilter!=='all'&&S.view!=='person'?supById(S.supFilter):null;
+    var a=document.createElement('a');a.href=url;a.download='order-'+today()+(fs?'-'+fs.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''):'')+'.csv';
     document.body.append(a);a.click();a.remove();
     setTimeout(function(){URL.revokeObjectURL(url);},4000);toast(t('saved'));
   }catch(e){S.csvText=txt;render();}
@@ -909,9 +1055,46 @@ function renderHistory(){
   return box;
 }
 
+/* ---------- suppliers screen (leads) ----------
+   Pick the project's default supplier from the list, and add, change or delete the company's own suppliers. */
+function renderSuppliers(){
+  var wrap=h('div');
+  wrap.append(h('p',{class:'hint',style:'margin:0 0 14px'},t('supHint')));
+  var list=h('div',{class:'list'});
+  S.sups.forEach(function(x){list.append(supCard(x));});
+  wrap.append(list,supForm());
+  return wrap;
+}
+function supCard(x){
+  var isDef=S.defaultId===x.id,mine=!!x.co,k='s:'+x.id,sure=S.confirm===k;
+  var meta=h('div',{class:'meta'});
+  if(mine)meta.append(h('span',{class:'pill'},t('own')),supHost(x.url));
+  var acts=h('div',{class:'acts'});
+  acts.append(h('button',{type:'button',class:'ord'+(isDef?' on':''),'aria-pressed':String(isDef),disabled:!S.canWrite||null,
+    onclick:function(){if(!isDef)setDefault(x.id);}},icon('check'),isDef?t('defaultPill'):t('setDefault')));
+  if(mine&&S.canWrite){
+    acts.append(h('button',{type:'button',class:'sq','aria-label':t('edit')+': '+x.name,title:t('edit'),onclick:function(){S.supEdit=x.id;render();var i=document.getElementById('supName');if(i)i.focus();}},icon('edit')));
+    acts.append(h('button',{type:'button',class:'sq del'+(sure?' sure':''),'aria-label':t('supDelete')+': '+x.name,title:sure?t('supDeleteSure'):t('supDelete'),onclick:function(){askDeleteSup(x.id);}},sure?t('supDeleteSure'):icon('trash')));
+  }
+  return h('div',{class:'card'+(isDef?' done':'')},h('div',{class:'main'},h('div',{class:'title'},x.name),meta),acts);
+}
+function supForm(){
+  var e=S.supEdit?supById(S.supEdit):null;
+  if(!S.canWrite)return null;
+  var name=h('input',{type:'text',id:'supName',maxlength:'40',value:e?e.name:null,placeholder:t('supNamePh'),autocomplete:'off'});
+  var url=h('input',{type:'text',id:'supUrl',maxlength:'300',value:e?e.url:null,placeholder:t('supUrlPh'),autocomplete:'off',autocapitalize:'off',spellcheck:'false',inputmode:'url'});
+  return h('form',{class:'form supform',onsubmit:function(ev){ev.preventDefault();saveSupplier(e?e.id:null,name.value,url.value);}},
+    h('h3',{style:'margin:0;font-size:17px'},e?t('supEditTitle'):t('supAdd')),
+    h('label',null,t('supName'),name),
+    h('label',null,t('supUrl'),url,h('span',{class:'hint'},t('supUrlHint'))),
+    h('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},
+      h('button',{type:'submit',class:'btn pri'},icon('check'),t('supSave')),
+      e?h('button',{type:'button',class:'btn',onclick:function(){S.supEdit=null;render();}},t('supCancel')):null));
+}
+
 /* ---------- boot ---------- */
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&S.session&&!S.demo)refetch(S.gen); });
-document.addEventListener('focusout',function(){ if(S.dirty){setTimeout(function(){ var a=document.activeElement; if(!(a&&a.classList&&a.classList.contains('art'))){S.dirty=false;render();} },60);} });
+document.addEventListener('focusout',function(){ if(S.dirty){setTimeout(function(){ if(!typing()){S.dirty=false;render();} },60);} });
 function recent(it){var d=new Date(it.at);return !isNaN(d)&&Date.now()-d<3000;}
 var saved=null;try{saved=JSON.parse(ls('ol.session')||'null');}catch(e){}
 if(saved&&saved.co&&saved.pid&&saved.name&&(saved.role==='lead'||saved.role==='electrician'))start(saved);else showJoin();
