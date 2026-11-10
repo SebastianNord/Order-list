@@ -300,6 +300,9 @@ var S={session:null,items:[],favs:[],cutoff:'15:00',tab:'today',view:'item',read
   canWrite:true,slow:false,gen:0,dirty:false,editCut:false,csvText:null,db:null,confirm:null,uid:null,
   sups:[],defaultId:null,supFilter:'all',supEdit:null};
 var unsubs=[],slowTimer=null,tick=null,busy={};
+/* lastSig: what the screen was last built from, so identical data never redraws.
+   popped: items whose "pop" animation already played. pendingQty: quantity taps not yet saved. */
+var lastSig=null,popped={},pendingQty={},renderT=null,imgOk={};
 var app=document.getElementById('app');
 var CFG=window.APP_CONFIG||{};var sb=null;
 try{ if(window.supabase&&CFG.url&&CFG.key) sb=window.supabase.createClient(CFG.url,CFG.key); }catch(e){ sb=null; }
@@ -322,18 +325,34 @@ async function ensureAuth(){
   if(!ses){var r=await sb.auth.signInAnonymously();if(r.error)throw r.error;ses=r.data.session;}
   S.uid=ses.user.id;return ses;
 }
-async function refetch(gen){
+/* a quantity the user tapped but the server has not confirmed yet wins over what the server sends back */
+function keepPending(rows){
+  rows.forEach(function(r){var p=pendingQty[r.id];if(p)r.qty=p.qty;});
+  return rows;
+}
+/* apply one changed row (from our own insert or from realtime) without reloading the list */
+function upsertItem(row){
+  keepPending([row]);
+  var i=S.items.findIndex(function(x){return x.id===row.id;});
+  if(i<0)S.items.push(row);else S.items[i]=row;
+}
+/* several realtime events in a row cause one redraw */
+function softRender(){clearTimeout(renderT);renderT=setTimeout(render,40);}
+/* full reload. itemsOnly skips the project settings call (used when rolling back a failed save). */
+async function refetch(gen,itemsOnly){
   if(S.demo||!S.session||!sb)return;
   var pid=S.session.pid,co=S.session.co,since=dstr(new Date(Date.now()-8*864e5));
   try{
     var a=await sb.from('items').select('*').eq('company_id',co).eq('project_id',pid).gte('day',since).order('created_at',{ascending:true}).limit(1000);
     if(gen!==S.gen)return;
     if(a.error)throw a.error;
-    S.items=a.data.map(mapRow);S.ready=true;S.slow=false;clearTimeout(slowTimer);
-    var p=await sb.from('projects').select('cutoff,default_supplier_id').eq('company_id',co).eq('id',pid).maybeSingle();
-    if(gen!==S.gen)return;
-    if(p.data){S.defaultId=p.data.default_supplier_id||null;}
-    if(p.data&&p.data.cutoff&&!S.editCut){S.cutoff=String(p.data.cutoff).slice(0,5);updateCut();}
+    S.items=keepPending(a.data.map(mapRow));S.ready=true;S.slow=false;clearTimeout(slowTimer);
+    if(!itemsOnly){
+      var p=await sb.from('projects').select('cutoff,default_supplier_id').eq('company_id',co).eq('id',pid).maybeSingle();
+      if(gen!==S.gen)return;
+      if(p.data){S.defaultId=p.data.default_supplier_id||null;}
+      if(p.data&&p.data.cutoff&&!S.editCut){S.cutoff=String(p.data.cutoff).slice(0,5);updateCut();}
+    }
     render();
   }catch(e){ if(gen!==S.gen)return; S.ready=true;S.slow=true;render(); }
 }
@@ -393,10 +412,26 @@ async function connect(){
   }catch(e){ if(gen!==S.gen)return; S.ready=true;S.slow=true;render();return; }
   var pid=S.session.pid;
   /* realtime filters take one column; other companies' rows are blocked by RLS, so project_id is enough */
-  channel=sb.channel('items-'+S.session.co+'-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(){
-    clearTimeout(refetchT);refetchT=setTimeout(function(){refetch(gen);},150);
-  }).subscribe();
-  pollTimer=setInterval(function(){refetch(gen);loadSuppliers(gen);},30000);
+  /* a changed row is applied straight from the event: no server call. Our own saves come back as the same
+     data, so nothing changes on screen. DELETE events are not delivered with a filter, so the poll below catches those. */
+  var down=false;
+  function startPoll(ms){clearInterval(pollTimer);pollTimer=setInterval(function(){refetch(gen);},ms);}
+  channel=sb.channel('items-'+S.session.co+'-'+pid).on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'project_id=eq.'+pid},function(p){
+    if(gen!==S.gen)return;
+    var n=p.new,o=p.old;
+    if(p.eventType==='DELETE'){
+      if(o&&o.id!=null){S.items=S.items.filter(function(x){return x.id!==o.id;});softRender();}
+      else{clearTimeout(refetchT);refetchT=setTimeout(function(){refetch(gen,true);},150);}
+    }else if(n&&n.id!=null){
+      if(n.company_id!==S.session.co)return;
+      upsertItem(mapRow(n));softRender();
+    }else{clearTimeout(refetchT);refetchT=setTimeout(function(){refetch(gen,true);},150);}
+  }).subscribe(function(status){
+    if(gen!==S.gen)return;
+    if(status==='SUBSCRIBED'){startPoll(30000);if(down){down=false;refetch(gen);}}
+    else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){down=true;startPoll(10000);}
+  });
+  startPoll(10000);
   await refetch(gen);loadFavs(gen);loadSuppliers(gen);
 }
 
@@ -491,9 +526,11 @@ async function addItem(text,qty,article){
     }else{
       var row={company_id:S.session.co,project_id:S.session.pid,day:today(),text:clean,qty:q,late:late};
       if(art)row.article=art;
-      var r=await sb.from('items').insert(row);
+      /* insert and read the saved row back in one call, then add just that row */
+      var r=await sb.from('items').insert(row).select();
       if(r.error)throw r.error;
-      refetch(S.gen);
+      if(r.data&&r.data[0]){upsertItem(mapRow(r.data[0]));render();}
+      else refetch(S.gen,true);
     }
     toast(t('addedToast')+': '+clean);return true;
   }catch(e){toast(t('errWrite'));return false;}
@@ -506,17 +543,49 @@ async function patch(id,data){
     render();
     if(!S.local){
       var r=await sb.from('items').update(data).eq('id',id);
-      if(r.error){toast(t('errWrite'));refetch(S.gen);}
+      if(r.error){toast(t('errWrite'));refetch(S.gen,true);}
     }
   }catch(e){toast(t('errWrite'));}
   finally{delete busy[id];}
+}
+/* quantity taps: the number changes at once and only that number is repainted; one save goes out
+   half a second after the last tap. Taps made while a save is running are never dropped. */
+function paintQty(it){
+  var card=document.querySelector('[data-id="'+it.id+'"]');
+  if(!card){render();return;}
+  var o=card.querySelector('.mini output');if(o)o.textContent=String(it.qty);
+  var box=card.querySelector('.qty');
+  if(box){var qb=box.querySelector('.qb');if(qb)qb.textContent='×'+it.qty;else box.textContent='×'+it.qty;}
+  if(!S.dirty)lastSig=sig();
+}
+function bumpQty(id,d){
+  var it=S.items.find(function(i){return i.id===id;});
+  if(!it||it.ordered||!S.canWrite)return;
+  var q=Math.max(1,Math.min(999,(+it.qty||1)+d));if(q===it.qty)return;
+  it.qty=q;paintQty(it);
+  if(S.local)return;
+  var p=pendingQty[id]||(pendingQty[id]={qty:q,timer:null,flying:false});
+  p.qty=q;clearTimeout(p.timer);p.timer=setTimeout(function(){flushQty(id);},500);
+}
+async function flushQty(id){
+  var p=pendingQty[id];if(!p||p.flying)return;
+  p.flying=true;var sent=p.qty,gen=S.gen;
+  try{
+    var r=await sb.from('items').update({qty:sent}).eq('id',id);
+    if(r.error)throw r.error;
+  }catch(e){
+    clearTimeout(p.timer);delete pendingQty[id];toast(t('errWrite'));refetch(gen,true);return;
+  }
+  p.flying=false;
+  if(p.qty!==sent){clearTimeout(p.timer);flushQty(id);}
+  else{clearTimeout(p.timer);delete pendingQty[id];}
 }
 async function removeMany(ids){
   try{
     S.items=S.items.filter(function(x){return ids.indexOf(x.id)<0;});S.confirm=null;render();
     if(!S.local){
       var r=await sb.from('items').delete().in('id',ids);
-      if(r.error){toast(t('errWrite'));refetch(S.gen);return;}
+      if(r.error){toast(t('errWrite'));refetch(S.gen,true);return;}
     }
     toast(t('removed'));
   }catch(e){toast(t('errWrite'));}
@@ -604,8 +673,10 @@ function qtyBox(article,qty){
   var art=(article||'').trim(),label='×'+qty,box=h('div',{class:'qty'},label);
   if(!art||imgState[art]===false)return box;
   function show(img){box.classList.add('hasimg');box.textContent='';box.append(img,h('span',{class:'qb'},label));}
+  /* an image that already loaded is drawn at once from a copy, so a redraw never flashes the plain number first */
+  if(imgOk[art]){var c=imgOk[art].cloneNode();c.decoding='sync';show(c);return box;}
   var img=new Image();img.alt='';img.decoding='async';img.referrerPolicy='no-referrer';
-  img.onload=function(){imgState[art]=true;show(img);};
+  img.onload=function(){imgState[art]=true;imgOk[art]=img;var c=img.cloneNode();c.decoding='sync';show(c);};
   img.onerror=function(){imgState[art]=false;};
   img.src=IMG_BASE+encodeURIComponent(art)+'/MEDIUM';
   return box;
@@ -792,7 +863,7 @@ function suggest(q){
 }
 
 function buildShell(){
-  var s=S.session; S.qty=S.qty||1;S.pickText='';S.pickArt='';
+  var s=S.session; S.qty=S.qty||1;S.pickText='';S.pickArt='';lastSig=null;
   qtyOut=h('output',{id:'qtyOut','aria-live':'polite'},String(S.qty));
   var input=h('input',{class:'txt',id:'itemText',type:'text',autocomplete:'off',maxlength:'120',placeholder:t('whatNeed'),'aria-label':t('whatNeed'),role:'combobox','aria-autocomplete':'list','aria-expanded':'false','aria-controls':'sug'});
   var go=h('button',{type:'submit',class:'go','aria-label':t('add'),id:'goBtn'},icon('plus'));
@@ -883,14 +954,21 @@ function updateCut(){
   var txt=document.getElementById('cutText'),m=document.getElementById('meter'),ce=document.getElementById('cutEdit');
   if(!txt)return;
   var c=S.cutoff.split(':'),cm=(+c[0])*60+(+c[1]||0),n=new Date(),nm=n.getHours()*60+n.getMinutes()+n.getSeconds()/60,left=cm-nm;
-  txt.replaceChildren(t('cutoff')+' ',h('b',null,S.cutoff));
-  if(left>0){var hh=Math.floor(left/60),mm=Math.ceil(left%60);if(mm===60){hh++;mm=0;}txt.append(' · '+(hh?hh+' h ':'')+mm+' min '+t('left'));
+  /* local clock only, no server call. The text and the edit control are rebuilt only when what they show
+     changes, so the 30-second tick no longer replaces the time field while a lead is typing in it. */
+  var tail;
+  if(left>0){var hh=Math.floor(left/60),mm=Math.ceil(left%60);if(mm===60){hh++;mm=0;}tail=' · '+(hh?hh+' h ':'')+mm+' min '+t('left');
     m.classList.remove('closed');var start=7*60;m.firstChild.style.width=Math.max(4,Math.min(100,(nm-start)/(cm-start)*100))+'%';}
-  else{txt.append(' · '+t('closed'));m.classList.add('closed');m.firstChild.style.width='100%';}
-  ce.replaceChildren();
-  if(isLead()){
-    if(S.editCut){var ti=h('input',{type:'time',id:'cutInput',value:S.cutoff,'aria-label':t('cutoff'),onchange:function(e){setCutoff(e.target.value);}});ce.append(ti);}
-    else ce.append(h('button',{class:'iconbtn',type:'button','aria-label':t('edit'),title:t('edit'),onclick:function(){S.editCut=true;updateCut();var i=document.getElementById('cutInput');if(i)i.focus();}},icon('edit')));
+  else{tail=' · '+t('closed');m.classList.add('closed');m.firstChild.style.width='100%';}
+  var tk=lang+'|'+S.cutoff+'|'+tail;
+  if(txt.dataset.k!==tk){txt.dataset.k=tk;txt.replaceChildren(t('cutoff')+' ',h('b',null,S.cutoff));txt.append(tail);}
+  var ck=lang+'|'+(isLead()?1:0)+'|'+(S.editCut?1:0)+'|'+S.cutoff;
+  if(ce.dataset.k!==ck){
+    ce.dataset.k=ck;ce.replaceChildren();
+    if(isLead()){
+      if(S.editCut){var ti=h('input',{type:'time',id:'cutInput',value:S.cutoff,'aria-label':t('cutoff'),onchange:function(e){setCutoff(e.target.value);}});ce.append(ti);}
+      else ce.append(h('button',{class:'iconbtn',type:'button','aria-label':t('edit'),title:t('edit'),onclick:function(){S.editCut=true;updateCut();var i=document.getElementById('cutInput');if(i)i.focus();}},icon('edit')));
+    }
   }
 }
 function renderFavs(){
@@ -900,9 +978,20 @@ function renderFavs(){
   S.favs.forEach(function(x){f.append(h('button',{type:'button',class:'chip',title:x,onclick:function(){addItem(x,1);}},'+ '+x));});
 }
 
+/* everything the screen is drawn from; if it is unchanged since the last draw, there is nothing to redraw */
+function sig(){
+  return today()+'|'+lang+'|'+JSON.stringify(S,function(k,v){return (k==='gen'||k==='dirty')?undefined:v;});
+}
+/* the "pop" animation plays once per item, not on every redraw in the 3 seconds after it was added */
+function freshOnce(entries){
+  var f=false;
+  entries.forEach(function(e){if(recent(e)){if(!popped[e.id])f=true;popped[e.id]=1;}});
+  return f;
+}
 function render(){
   if(!S.session)return;
   if(typing()){S.dirty=true;return;}
+  var s=sig();if(s===lastSig)return;lastSig=s;
   renderTabs();renderBanner();
   var c=document.getElementById('content');if(!c)return;
   var body;
@@ -958,12 +1047,12 @@ function renderMine(){
     if(it.article)meta.append(h('span',{class:'pill art'},it.article));
     var acts=h('div',{class:'acts'});
     if(!it.ordered&&S.canWrite)acts.append(h('div',{class:'mini',role:'group'},
-      h('button',{type:'button','aria-label':'−',onclick:function(){if(it.qty>1)patch(it.id,{qty:it.qty-1});}},icon('minus')),h('output',null,String(it.qty)),
-      h('button',{type:'button','aria-label':'+',onclick:function(){patch(it.id,{qty:Math.min(999,it.qty+1)});}},icon('plus'))));
+      h('button',{type:'button','aria-label':'−',onclick:function(){bumpQty(it.id,-1);}},icon('minus')),h('output',null,String(it.qty)),
+      h('button',{type:'button','aria-label':'+',onclick:function(){bumpQty(it.id,1);}},icon('plus'))));
     var fl=findLink(supById(S.defaultId),it.text,it.article);if(fl)acts.append(fl);
     acts.append(h('button',{type:'button',class:'sq'+(isFav(it.text)?' on':''),'aria-label':t('fav'),'aria-pressed':String(isFav(it.text)),title:t('fav'),onclick:function(){toggleFav(it.text);render();}},icon('star')));
     if(!it.ordered&&S.canWrite)acts.append(h('button',{type:'button',class:'sq del','aria-label':'Delete',onclick:function(){remove(it.id);}},icon('trash')));
-    list.append(h('div',{class:'card'+(it.ordered?' done':'')+(recent(it)?' fresh':'')},qtyBox(it.article,it.qty),h('div',{class:'main'},h('div',{class:'title'},it.text),meta),acts));
+    list.append(h('div',{class:'card'+(it.ordered?' done':'')+(freshOnce([it])?' fresh':''),'data-id':it.id},qtyBox(it.article,it.qty),h('div',{class:'main'},h('div',{class:'title'},it.text),meta),acts));
   });
   return list;
 }
@@ -1038,7 +1127,7 @@ function groupCard(g,locked){
   var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
   var kk='g:'+g.key,sureG=S.confirm===kk;
   var del=S.canWrite?h('button',{type:'button',class:'sq del'+(sureG?' sure':''),'aria-label':t('delAll'),title:t('delAll'),onclick:function(){askDelete(kk,g.entries.map(function(e){return e.id;}));}},sureG?t('delSure'):icon('trash')):null;
-  return h('div',{class:'card'+(g.ordered?' done':'')+(g.entries.some(recent)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title'},g.text),meta),
+  return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title'},g.text),meta),
     h('div',{class:'acts'},art,supSelect(g),findLink(effSup(g),g.text,g.article),ord,del));
 }
 function renderPeople(all){
