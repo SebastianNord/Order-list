@@ -165,6 +165,9 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .person{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:14px 16px}
 .person h3{margin:0 0 10px;display:flex;gap:10px;align-items:center;font-size:16px}
 .person h3 span.n{margin-left:auto;font-size:13px;color:var(--muted);font-weight:500}
+.grph{margin:22px 0 10px;display:flex;gap:10px;align-items:center;font-size:16px;text-transform:capitalize}
+.grph:first-child{margin-top:4px}
+.grph .n{margin-left:auto;font-size:13px;color:var(--muted);font-weight:500}
 .line{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
 .line .q{min-width:3ch;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
 .line .t{flex:1;min-width:0;overflow-wrap:anywhere}
@@ -257,7 +260,7 @@ var T={
   projectId:'Project ID',yourName:'Your name',role:'I am',electrician:'Electrician',leadRole:'Lead electrician',join:'Join project',demo:'Look around with a demo project',
   demoHint:'The demo uses made-up colleagues. Nothing is saved.',needName:'Enter your name.',needPid:'Enter a project ID, for example VASA-12.',
   pidPh:'e.g. VASA-12',namePh:'e.g. Sebastian',whatNeed:'What do you need for tomorrow?',add:'Add item',cutoff:'Cut-off',left:'left',closed:'Closed for today. New items are marked late.',
-  edit:'Change',today:'Today',orderTab:'Order',history:'History',byItem:'By item',byPerson:'By person',leave:'Leave project',
+  edit:'Change',today:'Today',orderTab:'Order',history:'History',byItem:'By item',byDate:'By date',byMember:'By member',byPerson:'By person',leave:'Leave project',
   emptyMine:'Your list is empty',emptyMineP:'Type what you need above, for example “Wago 221-413 ×20”. The lead sees it right away.',
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
   article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
@@ -276,7 +279,7 @@ var T={
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
   pidPh:'t.ex. VASA-12',namePh:'t.ex. Sebastian',whatNeed:'Vad behöver du till i morgon?',add:'Lägg till',cutoff:'Sista beställning',left:'kvar',closed:'Stängt för i dag. Nya rader markeras som sena.',
-  edit:'Ändra',today:'Idag',orderTab:'Beställ',history:'Historik',byItem:'Per artikel',byPerson:'Per person',leave:'Lämna projektet',
+  edit:'Ändra',today:'Idag',orderTab:'Beställ',history:'Historik',byItem:'Per artikel',byDate:'Per datum',byMember:'Per medlem',byPerson:'Per person',leave:'Lämna projektet',
   emptyMine:'Din lista är tom',emptyMineP:'Skriv vad du behöver ovan, till exempel ”Wago 221-413 ×20”. Ledaren ser det direkt.',
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
   article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
@@ -296,7 +299,7 @@ var lang=ls('ol.lang')||((navigator.language||'').slice(0,2)==='sv'?'sv':'en');
 function t(k){return (T[lang]&&T[lang][k])||T.en[k]||k;}
 
 /* ---------- state ---------- */
-var S={session:null,items:[],favs:[],cutoff:'15:00',tab:'today',view:'item',ready:false,local:false,demo:false,offline:false,
+var S={session:null,items:[],favs:[],cutoff:'15:00',tab:'today',view:'item',hview:'date',ready:false,local:false,demo:false,offline:false,
   canWrite:true,slow:false,gen:0,dirty:false,editCut:false,csvText:null,db:null,confirm:null,uid:null,
   sups:[],defaultId:null,supFilter:'all',supEdit:null};
 var unsubs=[],slowTimer=null,tick=null,busy={};
@@ -358,24 +361,19 @@ async function refetch(gen,itemsOnly){
 }
 /* history: every distinct item ever added in this project (no names, no status), newest wording wins */
 function histFrom(rows){
-  var m={},o=[];
-  rows.forEach(function(r){
-    var k=r.key||norm(r.text),x=m[k];
-    if(!x){x=m[k]={key:k,text:r.text,article:'',n:0};o.push(x);}
-    x.n++;if(r.article&&!x.article)x.article=r.article;
-  });
-  return o.sort(function(a,b){return a.text.localeCompare(b.text,lang);});
+  return rows.map(function(r){return {id:r.id,key:r.key||norm(r.text),text:r.text,article:r.article||'',qty:+r.qty||1,by:r.by,date:r.date,at:r.at};})
+    .sort(function(x,y){return (y.at||'').localeCompare(x.at||'');});
 }
 async function loadHistory(){
   var gen=S.gen;
   if(!S.session)return;
-  if(S.demo||S.local){S.hist=histFrom(S.items.slice().reverse());render();return;}
+  if(S.demo||S.local){S.hist=histFrom(S.items);render();return;}
   if(!sb)return;
   S.histLoading=!S.hist;S.histErr=false;render();
   try{
     var rows=[],from=0,size=1000,co=S.session.co,pid=S.session.pid;
     for(;;){
-      var r=await sb.from('items').select('key,text,article').eq('company_id',co).eq('project_id',pid)
+      var r=await sb.from('items').select('id,key,text,article,qty,by_name,day,created_at').eq('company_id',co).eq('project_id',pid)
         .order('created_at',{ascending:false}).order('id').range(from,from+size-1);
       if(gen!==S.gen)return;
       if(r.error)throw r.error;
@@ -383,7 +381,7 @@ async function loadHistory(){
       if(r.data.length<size)break;
       from+=size;
     }
-    S.hist=histFrom(rows);
+    S.hist=histFrom(rows.map(function(r){return {id:r.id,key:r.key,text:r.text,article:r.article,qty:r.qty,by:r.by_name,date:r.day,at:r.created_at};}));
   }catch(e){ if(gen!==S.gen)return; S.histErr=true; }
   S.histLoading=false;render();
 }
@@ -1013,6 +1011,10 @@ function renderTabs(){
   tb.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')));
   if(isLead())tb.append(tab('suppliers',t('suppliers')));
   tb.append(h('div',{class:'sp'}));
+  if(isLead()&&S.tab==='history'){
+    function hb(v,l){return h('button',{type:'button','aria-pressed':String(S.hview===v),onclick:function(){S.hview=v;render();}},l);}
+    tb.append(h('div',{class:'seg',role:'group'},hb('date',t('byDate')),hb('member',t('byMember'))));
+  }
   if(isLead()&&S.tab==='today'){
     function vb(v,l){return h('button',{type:'button','aria-pressed':String(S.view===v),onclick:function(){S.view=v;render();}},l);}
     tb.append(h('div',{class:'seg',role:'group'},vb('item',t('byItem')),vb('person',t('byPerson'))));
@@ -1167,30 +1169,41 @@ async function saveCsv(){
   }catch(e){S.csvText=txt;render();}
 }
 
-/* history: flat list of every item in the project. Pick a quantity (starts at 1) and add it to today's order. */
+/* history: every entry in the project as cards. Lead: grouped by date or by member. Member: own entries, by date.
+   Pick a quantity (starts at 1) and add it to today's order. */
+function histCard(x){
+  var out=h('output',null,String(S.hq[x.id]||1));
+  function set(n){S.hq[x.id]=Math.max(1,Math.min(999,n));out.textContent=S.hq[x.id];}
+  function add(){var q=S.hq[x.id]||1;S.hq[x.id]=1;out.textContent='1';addItem(x.text,q,x.article);}
+  var meta=h('div',{class:'meta'},hhmm(x.at));
+  if(S.hview==='member')meta.prepend(dayLabel(x.date)+' · ');
+  else if(isLead())meta.prepend(x.by+' · ');
+  if(x.article)meta.append(h('span',{class:'pill art'},x.article));
+  return h('div',{class:'card'},qtyBox(x.article,x.qty),h('div',{class:'main'},h('div',{class:'title'},x.text),meta),
+    h('div',{class:'acts'},
+      h('div',{class:'mini',role:'group','aria-label':'Quantity'},
+        h('button',{type:'button','aria-label':'−',onclick:function(){set((S.hq[x.id]||1)-1);}},icon('minus')),out,
+        h('button',{type:'button','aria-label':'+',onclick:function(){set((S.hq[x.id]||1)+1);}},icon('plus'))),
+      S.canWrite?h('button',{type:'button',class:'sq','aria-label':t('addAgain'),title:t('addAgain'),onclick:add},icon('plus')):null));
+}
 function renderHistory(){
   if(!S.hist){
     if(S.histErr)return emptyState(t('errServer'),'');
     if(S.histLoading)return h('p',{class:'hint',role:'status'},t('histLoading'));
   }
-  if(!S.hist||!S.hist.length)return emptyState(t('noHistory'),t('noHistoryP'));
-  var box=h('div',{class:'person'});
-  S.hist.forEach(function(x){
-    var out=h('output',null,String(S.hq[x.key]||1));
-    function set(n){S.hq[x.key]=Math.max(1,Math.min(999,n));out.textContent=S.hq[x.key];}
-    function add(){
-      var q=S.hq[x.key]||1;S.hq[x.key]=1;out.textContent='1';
-      addItem(x.text,q,x.article);
-    }
-    box.append(h('div',{class:'line'},
-      h('button',{type:'button',class:'t',style:'text-align:left',disabled:!S.canWrite||null,onclick:add},x.text),
-      x.article?h('span',{class:'pill art'},x.article):null,
-      h('div',{class:'mini',role:'group','aria-label':'Quantity'},
-        h('button',{type:'button','aria-label':'−',onclick:function(){set((S.hq[x.key]||1)-1);}},icon('minus')),out,
-        h('button',{type:'button','aria-label':'+',onclick:function(){set((S.hq[x.key]||1)+1);}},icon('plus'))),
-      S.canWrite?h('button',{type:'button',class:'sq','aria-label':t('addAgain'),title:t('addAgain'),onclick:add},icon('plus')):null));
+  var rows=(S.hist||[]).filter(function(x){return isLead()||x.by===S.session.name;});
+  if(!rows.length)return emptyState(t('noHistory'),t('noHistoryP'));
+  var byMember=isLead()&&S.hview==='member',m={},o=[];
+  rows.forEach(function(x){var k=byMember?x.by:x.date;if(!m[k]){m[k]=[];o.push(k);}m[k].push(x);});
+  if(byMember)o.sort(function(a,b){return a.localeCompare(b,lang);});
+  else o.sort().reverse();
+  var wrap=h('div');
+  o.forEach(function(k){
+    var list=h('div',{class:'list'});
+    m[k].forEach(function(x){list.append(histCard(x));});
+    wrap.append(h('h3',{class:'grph'},byMember?h('div',{class:'av'},(k[0]||'?').toUpperCase()):null,byMember?k:dayLabel(k),h('span',{class:'n'},String(m[k].length))),list);
   });
-  return box;
+  return wrap;
 }
 
 /* ---------- suppliers screen (leads) ----------
