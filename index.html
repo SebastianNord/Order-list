@@ -155,6 +155,11 @@ main{padding-block:22px 80px}
 .mini button{width:30px;height:30px;display:grid;place-items:center;border-radius:50%}
 .mini button:hover{background:var(--line)}
 .mini output{min-width:2ch;text-align:center;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+input.ed{border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px;font-size:15px;min-width:0}
+input.ed:focus{outline:none;border-color:var(--accent)}
+.editform{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:0}
+.editform input.ed.tx{flex:2 1 160px}.editform input.ed.no{flex:1 1 110px;font-family:var(--mono);font-size:13px}
+.artno{font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:12px;background:var(--surface2);min-width:64px;text-align:center}.artno.none{color:var(--muted)}
 input.art{width:130px;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px;font-family:var(--mono);font-size:13px}
 input.art:focus{outline:none;border-color:var(--accent)}
 .ord{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;font-weight:600;background:var(--fg);color:var(--bg)}
@@ -241,7 +246,7 @@ var ICONS={
   ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   copy:'<rect x="8" y="8" width="11" height="12" rx="2"/><path d="M5 15V5h10"/>',
   down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-  edit:'<path d="M4 20l1-4L16 5l3 3L8 19z"/>',out:'<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>',
+  edit:'<path d="M4 20l1-4L16 5l3 3L8 19z"/>',copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',out:'<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>',
   bolt:'<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>'
 };
 function icon(n){return h('span',{class:'ic',html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[n]+'</svg>'});}
@@ -263,7 +268,7 @@ var T={
   edit:'Change',today:'Today',orderTab:'Order',history:'History',byItem:'By item',byDate:'By date',byMember:'By member',byPerson:'By person',leave:'Leave project',
   emptyMine:'Your list is empty',emptyMineP:'Type what you need above, for example “Wago 221-413 ×20”. The lead sees it right away.',
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
-  article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
+  copyNo:'Copy number',noNumber:'No article number yet',numCopied:'Article number copied.',cancel:'Cancel',saveEdit:'Save',itemText:'Item',editRow:'Edit',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
   copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
   nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
@@ -282,7 +287,7 @@ var T={
   edit:'Ändra',today:'Idag',orderTab:'Beställ',history:'Historik',byItem:'Per artikel',byDate:'Per datum',byMember:'Per medlem',byPerson:'Per person',leave:'Lämna projektet',
   emptyMine:'Din lista är tom',emptyMineP:'Skriv vad du behöver ovan, till exempel ”Wago 221-413 ×20”. Ledaren ser det direkt.',
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
-  article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
+  copyNo:'Kopiera nummer',noNumber:'Inget artikelnummer än',numCopied:'Artikelnumret kopierades.',cancel:'Avbryt',saveEdit:'Spara',itemText:'Artikel',editRow:'Ändra',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
   copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
   nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
@@ -299,7 +304,7 @@ var lang=ls('ol.lang')||((navigator.language||'').slice(0,2)==='sv'?'sv':'en');
 function t(k){return (T[lang]&&T[lang][k])||T.en[k]||k;}
 
 /* ---------- state ---------- */
-var S={session:null,items:[],favs:[],cutoff:'15:00',tab:'today',view:'item',hview:'date',ready:false,local:false,demo:false,offline:false,
+var S={edit:null,session:null,items:[],favs:[],cutoff:'15:00',tab:'today',view:'item',hview:'date',ready:false,local:false,demo:false,offline:false,
   canWrite:true,slow:false,gen:0,dirty:false,editCut:false,csvText:null,db:null,confirm:null,uid:null,
   sups:[],defaultId:null,supFilter:'all',supEdit:null};
 var unsubs=[],slowTimer=null,tick=null,busy={};
@@ -616,6 +621,27 @@ async function setCutoff(v){
   }catch(e){toast(t('errWrite'));}
 }
 async function setForGroup(g,data){ for(var i=0;i<g.entries.length;i++){ await patch(g.entries[i].id,data); } }
+async function copyNumber(art){
+  try{await navigator.clipboard.writeText(art);toast(t('numCopied'));}
+  catch(e){toast(art);}
+}
+/* inline edit form: item text and article number; saves to the given item ids */
+function editForm(ids,text,article){
+  var tx=h('input',{class:'ed tx',type:'text',value:text,maxlength:'120','aria-label':t('itemText')});
+  var no=h('input',{class:'ed no',type:'text',value:article||'',maxlength:'30',placeholder:t('article'),'aria-label':t('article')});
+  function done(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();S.edit=null;render();}
+  async function save(){
+    var nt=tx.value.trim().slice(0,120);if(!nt){tx.focus();return;}
+    var data={text:nt,key:norm(nt),article:no.value.trim().slice(0,30)};
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    S.edit=null;
+    for(var i=0;i<ids.length;i++){await patch(ids[i],data);}
+  }
+  [tx,no].forEach(function(e){e.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();save();}else if(ev.key==='Escape')done();});});
+  setTimeout(function(){tx.focus();},0);
+  return h('div',{class:'editform'},tx,no,h('button',{type:'button',class:'btn pri',onclick:save},t('saveEdit')),h('button',{type:'button',class:'btn',onclick:done},t('cancel')));
+}
+function editBtn(k){return h('button',{type:'button',class:'sq','aria-label':t('editRow'),title:t('editRow'),onclick:function(){S.edit=k;render();}},icon('edit'));}
 
 /* demo data: made-up colleagues, kept in memory only */
 function demoSuppliers(){
@@ -833,7 +859,7 @@ function setLang(l){
 }
 
 function start(sess){
-  S.session=sess;S.demo=(sess.pid==='DEMO');S.tab='today';S.view='item';S.cutoff='15:00';S.editCut=false;S.csvText=null;
+  S.session=sess;S.edit=null;S.demo=(sess.pid==='DEMO');S.tab='today';S.view='item';S.cutoff='15:00';S.editCut=false;S.csvText=null;
   ls('ol.session',JSON.stringify(sess));
   buildShell();connect();
   clearInterval(tick);tick=setInterval(updateCut,30000);
@@ -1002,7 +1028,7 @@ function render(){
 function typing(){
   var a=document.activeElement;
   if(!a||!a.classList)return false;
-  if(a.classList.contains('art'))return true;
+  if(a.classList.contains('art')||a.classList.contains('ed'))return true;
   return !!(a.matches&&a.matches('input,textarea')&&a.closest&&a.closest('.supform'));
 }
 function renderTabs(){
@@ -1054,6 +1080,8 @@ function renderMine(){
     var fl=findLink(supById(S.defaultId),it.text,it.article);if(fl)acts.append(fl);
     acts.append(h('button',{type:'button',class:'sq'+(isFav(it.text)?' on':''),'aria-label':t('fav'),'aria-pressed':String(isFav(it.text)),title:t('fav'),onclick:function(){toggleFav(it.text);render();}},icon('star')));
     if(!it.ordered&&S.canWrite)acts.append(h('button',{type:'button',class:'sq del','aria-label':'Delete',onclick:function(){remove(it.id);}},icon('trash')));
+    if(!it.ordered&&S.canWrite)acts.append(editBtn('i:'+it.id));
+    if(S.edit==='i:'+it.id){list.append(h('div',{class:'card','data-id':it.id},editForm([it.id],it.text,it.article)));return;}
     list.append(h('div',{class:'card'+(it.ordered?' done':'')+(freshOnce([it])?' fresh':''),'data-id':it.id},qtyBox(it.article,it.qty),h('div',{class:'main'},h('div',{class:'title'},it.text),meta),acts));
   });
   return list;
@@ -1124,13 +1152,15 @@ function groupCard(g,locked){
       S.canWrite?h('button',{type:'button',class:'x'+(sure?' sure':''),'aria-label':t('delOne')+': '+p.by,title:sure?t('delSure'):t('delOne'),onclick:function(){askDelete(k,ids);}},sure?t('delSure'):icon('x')):null));
   });
   if(g.late)meta.append(h('span',{class:'pill late'},t('late')));
-  var art=h('input',{class:'art',type:'text',value:g.article||'',placeholder:t('article'),'aria-label':t('article')+': '+g.text,maxlength:'30',disabled:!S.canWrite||null});
-  art.addEventListener('change',function(){var v=art.value.trim();setForGroup(g,{article:v});});
+  var art=h('span',{class:'artno'+(g.article?'':' none'),title:g.article?t('article'):t('noNumber')},g.article||'–');
+  var cp=h('button',{type:'button',class:'sq','aria-label':t('copyNo'),title:g.article?t('copyNo'):t('noNumber'),disabled:!g.article||null,onclick:function(){copyNumber(g.article);}},icon('copy'));
+  var ek='g:e:'+g.key;
+  if(S.edit===ek)return h('div',{class:'card'},editForm(g.entries.map(function(e){return e.id;}),g.text,g.article));
   var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
   var kk='g:'+g.key,sureG=S.confirm===kk;
   var del=S.canWrite?h('button',{type:'button',class:'sq del'+(sureG?' sure':''),'aria-label':t('delAll'),title:t('delAll'),onclick:function(){askDelete(kk,g.entries.map(function(e){return e.id;}));}},sureG?t('delSure'):icon('trash')):null;
   return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title'},g.text),meta),
-    h('div',{class:'acts'},art,supSelect(g),findLink(effSup(g),g.text,g.article),ord,del));
+    h('div',{class:'acts'},art,cp,S.canWrite?editBtn(ek):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord,del));
 }
 function renderPeople(all){
   var m={},o=[];all.forEach(function(i){if(!m[i.by]){m[i.by]=[];o.push(i.by);}m[i.by].push(i);});
