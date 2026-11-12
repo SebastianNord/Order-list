@@ -690,7 +690,22 @@ function groups(items){
 function byPerson(g){var m={},o=[];g.entries.forEach(function(e){if(!m[e.by]){m[e.by]={by:e.by,qty:0};o.push(m[e.by]);}m[e.by].qty+=(+e.qty||1);});return o;}
 function sortGroups(gs){return gs.slice().sort(function(a,b){return (a.ordered-b.ordered)||a.text.localeCompare(b.text,lang);});}
 /* supplier link: search by article number when there is one, else by name */
-function findLink(sup,text,article){var q=(article||'').trim()||text;return sup?h('a',{class:'lnk',href:supUrl(sup,q),target:'_blank',rel:'noopener noreferrer'},icon('ext'),t('findAt')+' '+sup.name):null;}
+/* Android only: open the supplier's app if it is installed, else the website (Chrome intent link with a fallback).
+   iPhone cannot tell whether an app is installed, so it always gets the website. Add a host here when its package ID is known. */
+var APP_PKG={'rexel.se':'com.rexel.RexelSE'};
+var IS_ANDROID=/Android/i.test(navigator.userAgent||'');
+function appHref(url){
+  var host=supHost(url),pkg=IS_ANDROID&&APP_PKG[host];
+  if(!pkg)return null;
+  return 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+pkg+';S.browser_fallback_url='+encodeURIComponent(url)+';end';
+}
+function findLink(sup,text,article){
+  if(!sup)return null;
+  var q=(article||'').trim()||text,url=supUrl(sup,q),app=appHref(url);
+  var a=h('a',{class:'lnk',href:app||url,rel:'noopener noreferrer'},icon('ext'),t('findAt')+' '+sup.name);
+  if(!app)a.target='_blank';
+  return a;
+}
 /* card box: product image with a small quantity badge when the article number has an image, else the quantity */
 var IMG_BASE='https://apim-rxlse-prod-int-01.azure-api.net/pimv2/article/media/',imgState={};
 function qtyBox(article,qty){
