@@ -1017,10 +1017,8 @@ function renderFavorites(){
   if(!S.favs.length)return emptyState(t('noFavs'),t('noFavsP'));
   var list=h('div',{class:'list'});
   S.favs.forEach(function(x){
-    list.append(h('div',{class:'card'},h('div',{class:'main'},h('div',{class:'title'},x)),
-      h('div',{class:'acts'},
-        h('button',{type:'button',class:'sq on','aria-label':t('fav'),'aria-pressed':'true',title:t('fav'),onclick:function(){toggleFav(x);}},icon('star')),
-        h('button',{type:'button',class:'btn pri',disabled:!S.canWrite||null,onclick:function(){addItem(x,1);}},icon('plus'),t('addAgain')))));
+    var k=norm(x),m=(S.hist||[]).concat(S.items).filter(function(i){return norm(i.text)===k;}).pop();
+    list.append(histCard({id:'fav:'+k,text:x,article:m?m.article:'',qty:1},true));
   });
   return list;
 }
@@ -1224,12 +1222,13 @@ async function saveCsv(){
 
 /* history: every entry in the project as cards. Lead: grouped by date or by member. Member: own entries, by date.
    Pick a quantity (starts at 1) and add it to today's order. */
-function histCard(x){
+function histCard(x,fav){
   var out=h('output',null,String(S.hq[x.id]||1));
   function set(n){S.hq[x.id]=Math.max(1,Math.min(999,n));out.textContent=S.hq[x.id];}
   function add(){var q=S.hq[x.id]||1;S.hq[x.id]=1;out.textContent='1';addItem(x.text,q,x.article);}
-  var meta=h('div',{class:'meta'},hhmm(x.at));
-  if(S.hview==='member')meta.prepend(dayLabel(x.date)+' · ');
+  var meta=h('div',{class:'meta'},fav?null:hhmm(x.at));
+  if(fav){}
+  else if(S.hview==='member')meta.prepend(dayLabel(x.date)+' · ');
   else if(isLead())meta.prepend(x.by+' · ');
   if(x.article)meta.append(h('span',{class:'pill art'},x.article));
   return h('div',{class:'card'},qtyBox(x.article,x.qty),h('div',{class:'main'},h('div',{class:'title'},x.text),meta),
@@ -1237,6 +1236,7 @@ function histCard(x){
       h('div',{class:'mini',role:'group','aria-label':'Quantity'},
         h('button',{type:'button','aria-label':'−',onclick:function(){set((S.hq[x.id]||1)-1);}},icon('minus')),out,
         h('button',{type:'button','aria-label':'+',onclick:function(){set((S.hq[x.id]||1)+1);}},icon('plus'))),
+      fav?h('button',{type:'button',class:'sq on','aria-label':t('fav'),'aria-pressed':'true',title:t('fav'),onclick:function(){toggleFav(x.text);}},icon('star')):null,
       S.canWrite?h('button',{type:'button',class:'sq','aria-label':t('addAgain'),title:t('addAgain'),onclick:add},icon('plus')):null));
 }
 function renderHistory(){
