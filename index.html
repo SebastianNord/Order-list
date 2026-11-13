@@ -271,7 +271,7 @@ var T={
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
   copyNo:'Copy number',noNumber:'No article number yet',copiedShort:'Copied',cancel:'Cancel',saveEdit:'Save',itemText:'Item',editRow:'Edit',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
   copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
-  nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
+  nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noFavs:'No favorites yet',noFavsP:'Tap the star on an item to keep it here. Tap a favorite to add it to today.',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
   addedToast:'Added',removed:'Removed',errWrite:'Could not save. Try again.',copyManual:'Select the text and copy it:',you:'you',by:'by',
@@ -290,7 +290,7 @@ var T={
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
   copyNo:'Kopiera nummer',noNumber:'Inget artikelnummer än',copiedShort:'Kopierat',cancel:'Avbryt',saveEdit:'Spara',itemText:'Artikel',editRow:'Ändra',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
   copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
-  nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
+  nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noFavs:'Inga favoriter än',noFavsP:'Tryck på stjärnan på en artikel för att spara den här. Tryck på en favorit för att lägga till den idag.',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
   addedToast:'Tillagd',removed:'Borttagen',errWrite:'Kunde inte spara. Försök igen.',copyManual:'Markera texten och kopiera:',you:'du',by:'av',
@@ -979,16 +979,15 @@ function buildShell(){
     go,sugBox);
   var cutText=h('span',{id:'cutText'}),meter=h('div',{class:'meter',id:'meter'},h('i')),cutEdit=h('span',{id:'cutEdit'});
   var cut=h('div',{class:'cut'},icon('clock'),cutText,meter,cutEdit);
-  var favs=h('div',{class:'favs',id:'favs'});
   var top=h('div',{class:'top'},h('div',{class:'wrap'},
     h('div',{class:'brandrow'},brand(),h('span',{class:'pid'},(s.coName&&!S.demo?s.coName+' · ':'')+s.pid),h('div',{class:'sp'}),langSeg(),
       h('div',{class:'me'},h('div',{class:'av'},(s.name[0]||'?').toUpperCase()),h('div',null,h('div',{class:'nm'},s.name),h('div',{class:'rolechip'},isLead()?t('leadRole'):t('electrician'))),
         h('button',{class:'iconbtn',type:'button','aria-label':t('leave'),title:t('leave'),onclick:leave},icon('out')))),
-    form,favs,cut));
+    form,cut));
   var tabs=h('div',{class:'tabs',id:'tabs'});
   var main=h('main',null,h('div',{class:'wrap'},tabs,h('div',{id:'banner'}),h('div',{id:'content'})));
   app.replaceChildren(top,main);
-  updateCut();renderFavs();
+  updateCut();
 }
 
 /* ---------- partial renders ---------- */
@@ -1013,11 +1012,17 @@ function updateCut(){
     }
   }
 }
-function renderFavs(){
-  var f=document.getElementById('favs');if(!f)return;f.replaceChildren();
-  if(!S.favs.length)return;
-  f.append(h('span',{class:'lbl'},t('favs')));
-  S.favs.forEach(function(x){f.append(h('button',{type:'button',class:'chip',title:x,onclick:function(){addItem(x,1);}},'+ '+x));});
+function renderFavs(){if(S.tab==='favs'&&S.ready)render();}
+function renderFavorites(){
+  if(!S.favs.length)return emptyState(t('noFavs'),t('noFavsP'));
+  var list=h('div',{class:'list'});
+  S.favs.forEach(function(x){
+    list.append(h('div',{class:'card'},h('div',{class:'main'},h('div',{class:'title'},x)),
+      h('div',{class:'acts'},
+        h('button',{type:'button',class:'sq on','aria-label':t('fav'),'aria-pressed':'true',title:t('fav'),onclick:function(){toggleFav(x);}},icon('star')),
+        h('button',{type:'button',class:'btn pri',disabled:!S.canWrite||null,onclick:function(){addItem(x,1);}},icon('plus'),t('addAgain')))));
+  });
+  return list;
 }
 
 /* everything the screen is drawn from; if it is unchanged since the last draw, there is nothing to redraw */
@@ -1039,6 +1044,7 @@ function render(){
   var body;
   if(S.tab==='suppliers'&&isLead())body=renderSuppliers();
   else if(S.tab==='history')body=renderHistory();
+  else if(S.tab==='favs')body=renderFavorites();
   else body=isLead()?renderLead():renderMine();
   c.replaceChildren(body);
 }
@@ -1052,7 +1058,7 @@ function typing(){
 function renderTabs(){
   var tb=document.getElementById('tabs');if(!tb)return;tb.replaceChildren();
   function tab(id,label){return h('button',{type:'button',class:'tab','aria-pressed':String(S.tab===id),onclick:function(){S.tab=id;S.csvText=null;render();if(id==='history')loadHistory();if(id==='suppliers')loadSuppliers();}},label);}
-  tb.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')));
+  tb.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')),tab('favs',t('favs')));
   if(isLead())tb.append(tab('suppliers',t('suppliers')));
   tb.append(h('div',{class:'sp'}));
   if(isLead()&&S.tab==='history'){
