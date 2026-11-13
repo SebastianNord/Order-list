@@ -1155,10 +1155,10 @@ function tile(n,l){return h('div',{class:'tile'},h('b',null,String(n)),h('span',
 /* lead picks which supplier an item is ordered from; "Default" follows the project default */
 function supSelect(g){
   var cur=groupSup(g),d=supById(S.defaultId);
-  /* cycle order: project default (null), then each supplier */
-  var opts=[{id:null,label:d?t('useDefault')+': '+d.name:t('useDefault')}];
-  S.sups.forEach(function(x){if(x.hidden&&!(cur&&cur.id===x.id))return;opts.push({id:x.id,label:x.name});});
-  var i=0;opts.forEach(function(o,n){if(o.id===(cur?cur.id:null))i=n;});
+  /* cycle order: the project default (no tag, shown by its plain name), then every other supplier */
+  var opts=[{id:null,label:d?d.name:t('noSup')}];
+  S.sups.forEach(function(x){if(d&&x.id===d.id)return;if(x.hidden&&!(cur&&cur.id===x.id))return;opts.push({id:x.id,label:x.name});});
+  var i=0;opts.forEach(function(o,n){if(cur&&o.id===cur.id)i=n;});
   var next=opts[(i+1)%opts.length];
   return h('button',{type:'button',class:'btn supcycle','aria-label':t('supplierFor')+' '+g.text+': '+opts[i].label,title:t('supplierFor')+' '+g.text,disabled:!S.canWrite||null,
     onclick:function(){setForGroup(g,{supplier_id:next.id});}},opts[i].label);
