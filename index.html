@@ -159,7 +159,7 @@ input.ed{border:2px solid var(--line);background:var(--bg);border-radius:12px;pa
 input.ed:focus{outline:none;border-color:var(--accent)}
 .editform{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:0}
 .editform input.ed.tx{flex:2 1 160px}.editform input.ed.no{flex:1 1 110px;font-family:var(--mono);font-size:13px}
-.artno{font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:12px;background:var(--surface2);min-width:64px;text-align:center}.artno.none{color:var(--muted)}
+.artno{font-family:var(--mono);font-size:13px;padding:0 10px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--surface2);min-width:64px;text-align:center}.artno.none{color:var(--muted)}
 input.art{width:130px;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px;font-family:var(--mono);font-size:13px}
 input.art:focus{outline:none;border-color:var(--accent)}
 .ord{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;font-weight:600;background:var(--fg);color:var(--bg)}
@@ -206,7 +206,7 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .form .alt{color:var(--accent);font-weight:600;text-align:center;padding:4px;text-decoration:underline;text-underline-offset:3px}
 .err{color:var(--danger);font-size:13px;font-weight:500;min-height:1em}
 .hint{font-size:13px;color:var(--muted);margin:0;text-transform:none;letter-spacing:0;font-weight:400}
-.copy{cursor:pointer}.supcycle{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy{cursor:pointer}.supcycle{height:38px;min-width:64px;max-width:190px;padding:0 10px;justify-content:center;border-radius:12px;font-size:13px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sq.wide{width:auto;min-width:64px;padding:0 10px}
 .sel{max-width:190px;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px;font-size:13px}
 .sel:focus{outline:none;border-color:var(--accent)}
 .sel:disabled,.btn:disabled,.ord:disabled{opacity:.5;cursor:not-allowed}
@@ -644,7 +644,7 @@ function editForm(ids,text,article,delKey){
   var del=delKey?h('button',{type:'button',class:'sq del'+(sureD?' sure':''),'aria-label':t('delAll'),title:t('delAll'),onclick:function(){if(S.confirm===delKey)S.edit=null;askDelete(delKey,ids);}},sureD?t('delSure'):icon('trash')):null;
   return h('div',{class:'editform'},tx,no,h('button',{type:'button',class:'btn pri',onclick:save},t('saveEdit')),h('button',{type:'button',class:'btn',onclick:done},t('cancel')),del);
 }
-function editBtn(k){return h('button',{type:'button',class:'sq','aria-label':t('editRow'),title:t('editRow'),onclick:function(){S.edit=k;render();}},icon('edit'));}
+function editBtn(k,c){return h('button',{type:'button',class:'sq'+(c?' '+c:''),'aria-label':t('editRow'),title:t('editRow'),onclick:function(){S.edit=k;render();}},icon('edit'));}
 
 /* demo data: made-up colleagues, kept in memory only */
 function demoSuppliers(){
@@ -1177,7 +1177,7 @@ function groupCard(g,locked){
   if(S.edit===ek)return h('div',{class:'card'},editForm(g.entries.map(function(e){return e.id;}),g.text,g.article,S.canWrite?kk:null));
   var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
   return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title copy',onclick:function(){copyText(g.text);}},g.text),meta),
-    h('div',{class:'acts'},art,S.canWrite?editBtn(ek):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord));
+    h('div',{class:'acts'},art,S.canWrite?editBtn(ek,'wide'):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord));
 }
 function renderPeople(all){
   var m={},o=[];all.forEach(function(i){if(!m[i.by]){m[i.by]=[];o.push(i.by);}m[i.by].push(i);});
