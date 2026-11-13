@@ -206,6 +206,7 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .form .alt{color:var(--accent);font-weight:600;text-align:center;padding:4px;text-decoration:underline;text-underline-offset:3px}
 .err{color:var(--danger);font-size:13px;font-weight:500;min-height:1em}
 .hint{font-size:13px;color:var(--muted);margin:0;text-transform:none;letter-spacing:0;font-weight:400}
+.copy{cursor:pointer}.supcycle{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sel{max-width:190px;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 10px;font-size:13px}
 .sel:focus{outline:none;border-color:var(--accent)}
 .sel:disabled,.btn:disabled,.ord:disabled{opacity:.5;cursor:not-allowed}
@@ -268,7 +269,7 @@ var T={
   edit:'Change',today:'Today',orderTab:'Order',history:'History',byItem:'By item',byDate:'By date',byMember:'By member',byPerson:'By person',leave:'Leave project',
   emptyMine:'Your list is empty',emptyMineP:'Type what you need above, for example “Wago 221-413 ×20”. The lead sees it right away.',
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
-  copyNo:'Copy number',noNumber:'No article number yet',numCopied:'Article number copied.',cancel:'Cancel',saveEdit:'Save',itemText:'Item',editRow:'Edit',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
+  copyNo:'Copy number',noNumber:'No article number yet',copiedShort:'Copied',cancel:'Cancel',saveEdit:'Save',itemText:'Item',editRow:'Edit',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
   copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
   nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
@@ -287,7 +288,7 @@ var T={
   edit:'Ändra',today:'Idag',orderTab:'Beställ',history:'Historik',byItem:'Per artikel',byDate:'Per datum',byMember:'Per medlem',byPerson:'Per person',leave:'Lämna projektet',
   emptyMine:'Din lista är tom',emptyMineP:'Skriv vad du behöver ovan, till exempel ”Wago 221-413 ×20”. Ledaren ser det direkt.',
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
-  copyNo:'Kopiera nummer',noNumber:'Inget artikelnummer än',numCopied:'Artikelnumret kopierades.',cancel:'Avbryt',saveEdit:'Spara',itemText:'Artikel',editRow:'Ändra',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
+  copyNo:'Kopiera nummer',noNumber:'Inget artikelnummer än',copiedShort:'Kopierat',cancel:'Avbryt',saveEdit:'Spara',itemText:'Artikel',editRow:'Ändra',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
   copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
   nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
@@ -621,12 +622,12 @@ async function setCutoff(v){
   }catch(e){toast(t('errWrite'));}
 }
 async function setForGroup(g,data){ for(var i=0;i<g.entries.length;i++){ await patch(g.entries[i].id,data); } }
-async function copyNumber(art){
-  try{await navigator.clipboard.writeText(art);toast(t('numCopied'));}
-  catch(e){toast(art);}
+async function copyText(v){
+  try{await navigator.clipboard.writeText(v);toast(t('copiedShort'));}
+  catch(e){toast(v);}
 }
 /* inline edit form: item text and article number; saves to the given item ids */
-function editForm(ids,text,article){
+function editForm(ids,text,article,delKey){
   var tx=h('input',{class:'ed tx',type:'text',value:text,maxlength:'120','aria-label':t('itemText')});
   var no=h('input',{class:'ed no',type:'text',value:article||'',maxlength:'30',placeholder:t('article'),'aria-label':t('article')});
   function done(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();S.edit=null;render();}
@@ -639,7 +640,9 @@ function editForm(ids,text,article){
   }
   [tx,no].forEach(function(e){e.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();save();}else if(ev.key==='Escape')done();});});
   setTimeout(function(){tx.focus();},0);
-  return h('div',{class:'editform'},tx,no,h('button',{type:'button',class:'btn pri',onclick:save},t('saveEdit')),h('button',{type:'button',class:'btn',onclick:done},t('cancel')));
+  var sureD=delKey&&S.confirm===delKey;
+  var del=delKey?h('button',{type:'button',class:'sq del'+(sureD?' sure':''),'aria-label':t('delAll'),title:t('delAll'),onclick:function(){if(S.confirm===delKey)S.edit=null;askDelete(delKey,ids);}},sureD?t('delSure'):icon('trash')):null;
+  return h('div',{class:'editform'},tx,no,h('button',{type:'button',class:'btn pri',onclick:save},t('saveEdit')),h('button',{type:'button',class:'btn',onclick:done},t('cancel')),del);
 }
 function editBtn(k){return h('button',{type:'button',class:'sq','aria-label':t('editRow'),title:t('editRow'),onclick:function(){S.edit=k;render();}},icon('edit'));}
 
@@ -1152,12 +1155,13 @@ function tile(n,l){return h('div',{class:'tile'},h('b',null,String(n)),h('span',
 /* lead picks which supplier an item is ordered from; "Default" follows the project default */
 function supSelect(g){
   var cur=groupSup(g),d=supById(S.defaultId);
-  var sel=h('select',{class:'sel','aria-label':t('supplierFor')+' '+g.text,disabled:!S.canWrite||null,
-    onchange:function(){setForGroup(g,{supplier_id:sel.value||null});}});
-  sel.append(h('option',{value:''},d?t('useDefault')+': '+d.name:t('useDefault')));
-  S.sups.forEach(function(x){if(x.hidden&&!(cur&&cur.id===x.id))return;sel.append(h('option',{value:x.id},x.name));});
-  sel.value=cur?cur.id:'';
-  return sel;
+  /* cycle order: project default (null), then each supplier */
+  var opts=[{id:null,label:d?t('useDefault')+': '+d.name:t('useDefault')}];
+  S.sups.forEach(function(x){if(x.hidden&&!(cur&&cur.id===x.id))return;opts.push({id:x.id,label:x.name});});
+  var i=0;opts.forEach(function(o,n){if(o.id===(cur?cur.id:null))i=n;});
+  var next=opts[(i+1)%opts.length];
+  return h('button',{type:'button',class:'btn supcycle','aria-label':t('supplierFor')+' '+g.text+': '+opts[i].label,title:t('supplierFor')+' '+g.text,disabled:!S.canWrite||null,
+    onclick:function(){setForGroup(g,{supplier_id:next.id});}},opts[i].label);
 }
 function groupCard(g,locked){
   var meta=h('div',{class:'meta'});
@@ -1167,15 +1171,13 @@ function groupCard(g,locked){
       S.canWrite?h('button',{type:'button',class:'x'+(sure?' sure':''),'aria-label':t('delOne')+': '+p.by,title:sure?t('delSure'):t('delOne'),onclick:function(){askDelete(k,ids);}},sure?t('delSure'):icon('x')):null));
   });
   if(g.late)meta.append(h('span',{class:'pill late'},t('late')));
-  var art=h('span',{class:'artno'+(g.article?'':' none'),title:g.article?t('article'):t('noNumber')},g.article||'–');
-  var cp=h('button',{type:'button',class:'sq','aria-label':t('copyNo'),title:g.article?t('copyNo'):t('noNumber'),disabled:!g.article||null,onclick:function(){copyNumber(g.article);}},icon('copy'));
-  var ek='g:e:'+g.key;
-  if(S.edit===ek)return h('div',{class:'card'},editForm(g.entries.map(function(e){return e.id;}),g.text,g.article));
-  var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
+  var art=h('span',{class:'artno'+(g.article?' copy':' none'),title:g.article?t('copyNo'):t('noNumber'),onclick:g.article?function(){copyText(g.article);}:null},g.article||'–');
   var kk='g:'+g.key,sureG=S.confirm===kk;
-  var del=S.canWrite?h('button',{type:'button',class:'sq del'+(sureG?' sure':''),'aria-label':t('delAll'),title:t('delAll'),onclick:function(){askDelete(kk,g.entries.map(function(e){return e.id;}));}},sureG?t('delSure'):icon('trash')):null;
-  return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title'},g.text),meta),
-    h('div',{class:'acts'},art,cp,S.canWrite?editBtn(ek):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord,del));
+  var ek='g:e:'+g.key;
+  if(S.edit===ek)return h('div',{class:'card'},editForm(g.entries.map(function(e){return e.id;}),g.text,g.article,S.canWrite?kk:null));
+  var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
+  return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title copy',onclick:function(){copyText(g.text);}},g.text),meta),
+    h('div',{class:'acts'},art,S.canWrite?editBtn(ek):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord));
 }
 function renderPeople(all){
   var m={},o=[];all.forEach(function(i){if(!m[i.by]){m[i.by]=[];o.push(i.by);}m[i.by].push(i);});
