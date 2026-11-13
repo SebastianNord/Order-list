@@ -64,5 +64,3 @@ The browser talks to Supabase directly. Access rules live in the database
 - Bolagsverket lookup when adding a company
 - Reminders before the cut-off
 - Sending orders straight to a supplier
-
-<!-- preview test -->
