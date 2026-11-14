@@ -106,8 +106,10 @@ button:not(:disabled):active{filter:brightness(.95)}
 
 /* body */
 main{padding-block:22px 80px}
-.tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
-.tab{padding:9px 18px;border-radius:999px;font-weight:600;color:var(--muted);background:transparent}
+.tabs{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:18px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs>*{flex-shrink:0}
+.tab{padding:9px 18px;border-radius:999px;font-weight:600;color:var(--muted);background:transparent;white-space:nowrap}
 .tab[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
 .tabs .sp{flex:1}
 .tabs .seg{background:var(--surface2)}
