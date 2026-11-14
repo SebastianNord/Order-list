@@ -112,9 +112,10 @@ main{padding-block:22px 80px}
 .tabscroll>*,.tabs>.seg{flex-shrink:0}
 .tab{padding:9px 18px;border-radius:999px;font-weight:600;color:var(--muted);background:transparent;white-space:nowrap}
 .tab[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
-.tabs .seg{background:var(--surface2)}
-.tabs .seg button{color:var(--muted)}
-.tabs .seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.tabs .seg,.viewseg .seg{background:var(--surface2)}
+.tabs .seg button,.viewseg .seg button{color:var(--muted)}
+.tabs .seg button[aria-pressed="true"],.viewseg .seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.viewseg{display:flex;margin-bottom:14px}
 .banner{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:12px 14px;margin-bottom:16px;font-size:14px;font-weight:500}
 .banner.info{background:var(--accent-soft);color:var(--fg)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
@@ -1101,10 +1102,6 @@ function renderTabs(){
     function hb(v,l){return h('button',{type:'button','aria-pressed':String(S.hview===v),onclick:function(){S.hview=v;render();}},l);}
     tb.append(h('div',{class:'seg',role:'group'},hb('date',t('byDate')),hb('member',t('byPerson'))));
   }
-  if(isLead()&&S.tab==='today'){
-    function vb(v,l){return h('button',{type:'button','aria-pressed':String(S.view===v),onclick:function(){S.view=v;render();}},l);}
-    tb.append(h('div',{class:'seg',role:'group'},vb('item',t('byItem')),vb('person',t('byPerson'))));
-  }
 }
 function renderBanner(){
   var b=document.getElementById('banner');if(!b)return;b.replaceChildren();
@@ -1168,6 +1165,8 @@ function renderLead(){
     if(!g.ordered)by[k].n++;
   });
   if(S.supFilter!=='all'&&!by[S.supFilter])S.supFilter='all';
+  function vb(v,l){return h('button',{type:'button','aria-pressed':String(S.view===v),onclick:function(){S.view=v;render();}},l);}
+  wrap.append(h('div',{class:'viewseg'},h('div',{class:'seg',role:'group'},vb('item',t('byItem')),vb('person',t('byPerson')))));
   var gs=allG.filter(inFilter),pending=gs.filter(function(g){return !g.ordered;}).length;
   if(S.view==='person')wrap.append(renderPeople(all));
   else{
