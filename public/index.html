@@ -1098,10 +1098,6 @@ function renderTabs(){
   sc.append(tab('today',isLead()?t('orderTab'):t('today')),tab('history',t('history')),tab('favs',t('favs')));
   if(isLead())sc.append(tab('suppliers',t('suppliers')));
   tb.append(sc);
-  if(isLead()&&S.tab==='history'){
-    function hb(v,l){return h('button',{type:'button','aria-pressed':String(S.hview===v),onclick:function(){S.hview=v;render();}},l);}
-    tb.append(h('div',{class:'seg',role:'group'},hb('date',t('byDate')),hb('member',t('byPerson'))));
-  }
 }
 function renderBanner(){
   var b=document.getElementById('banner');if(!b)return;b.replaceChildren();
@@ -1288,6 +1284,10 @@ function renderHistory(){
   if(byMember)o.sort(function(a,b){return a.localeCompare(b,lang);});
   else o.sort().reverse();
   var wrap=h('div');
+  if(isLead()){
+    function hb(v,l){return h('button',{type:'button','aria-pressed':String(S.hview===v),onclick:function(){S.hview=v;render();}},l);}
+    wrap.append(h('div',{class:'viewseg'},h('div',{class:'seg',role:'group'},hb('date',t('byDate')),hb('member',t('byPerson')))));
+  }
   o.forEach(function(k){
     var list=h('div',{class:'list'});
     m[k].forEach(function(x){list.append(histCard(x));});
