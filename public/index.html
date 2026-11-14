@@ -364,7 +364,7 @@ function stopSync(){
   clearTimeout(slowTimer);clearTimeout(refetchT);clearInterval(pollTimer);
   if(channel&&sb){try{sb.removeChannel(channel);}catch(e){}}channel=null;
 }
-function mapRow(r){return {id:r.id,pid:r.project_id,date:r.day,text:r.text,key:r.key,qty:r.qty,by:r.by_name,at:r.created_at,late:r.late,article:r.article||'',ordered:r.ordered,sup:r.supplier_id||null};}
+function mapRow(r){return {id:r.id,pid:r.project_id,date:r.day,text:r.text,key:r.key,qty:r.qty,by:r.by_name,at:r.created_at,late:r.late,article:r.article||'',ordered:r.ordered,ordAt:r.ordered_at||null,sup:r.supplier_id||null};}
 async function ensureAuth(){
   var g=await sb.auth.getSession();
   var ses=g.data&&g.data.session;
@@ -581,7 +581,7 @@ async function patch(id,data){
   if(data.ordered===true){checked[id]=1;buzz(20);}
   try{
     var it=S.items.find(function(i){return i.id===id;});
-    if(it){var loc=Object.assign({},data);if('supplier_id' in loc){loc.sup=loc.supplier_id;delete loc.supplier_id;}Object.assign(it,loc);}
+    if(it){var loc=Object.assign({},data);if('ordered' in loc)loc.ordAt=loc.ordered?new Date().toISOString():null;if('supplier_id' in loc){loc.sup=loc.supplier_id;delete loc.supplier_id;}Object.assign(it,loc);}
     render();
     if(!S.local){
       var r=await sb.from('items').update(data).eq('id',id);
@@ -1115,8 +1115,8 @@ function emptyState(title,p){
   return h('div',{class:'empty'},h('span',{html:'<svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="14" y="26" width="68" height="52" rx="12" fill="var(--accent-soft)"/><path d="M30 26v-6a18 18 0 0136 0v6" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M40 52l6 6 12-13" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}),
     h('h2',null,title),h('p',null,p));
 }
-/* today's list: items added today, plus anything from earlier days that is still not ordered (moves over at midnight) */
-function todays(){var d=today();return S.items.filter(function(i){return i.date===d||(i.date<d&&!i.ordered);});}
+/* today's list: items added today, plus anything from earlier days that is not ordered yet or was ordered today (drops off at the next midnight) */
+function todays(){var d=today();return S.items.filter(function(i){return i.date===d||(i.date<d&&(!i.ordered||(i.ordAt&&dstr(new Date(i.ordAt))===d)));});}
 function shortDate(ds){var p=ds.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(lang==='sv'?'sv-SE':'en-GB',{day:'numeric',month:'short'});}
 /* pills for a set of entries: "Late" (added after cut-off; with its date once it has moved to a later day)
    or "Unordered" + date (carried over, not late). Same-day late items get "Late" without a date. */
