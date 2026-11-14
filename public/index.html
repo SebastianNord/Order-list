@@ -275,6 +275,7 @@ function ls(k,v){try{ if(v===undefined) return localStorage.getItem(k); if(v===n
 function pad(n){return (n<10?'0':'')+n;}
 function dstr(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function today(){return dstr(new Date());}
+function tomorrow(){var d=new Date();d.setDate(d.getDate()+1);return dstr(d);}
 function norm(s){return s.toLowerCase().replace(/\s+/g,' ').trim();}
 function slug(s){return Array.from(norm(s)).map(function(c){return /[a-z0-9]/.test(c)?c:'_'+c.charCodeAt(0).toString(16);}).join('').slice(0,120)||'x';}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show');},2600);}
@@ -301,12 +302,12 @@ var T={
  en:{tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
   projectId:'Project ID',yourName:'Your name',role:'I am',electrician:'Electrician',leadRole:'Lead electrician',join:'Join project',demo:'Look around with a demo project',
   demoHint:'The demo uses made-up colleagues. Nothing is saved.',needName:'Enter your name.',needPid:'Enter a project ID, for example VASA-12.',
-  pidPh:'e.g. VASA-12',namePh:'e.g. Sebastian',whatNeed:'What do you need for tomorrow?',add:'Add item',cutoff:'Cut-off',left:'left',closed:'Closed for today. New items are marked late.',
+  pidPh:'e.g. VASA-12',namePh:'e.g. Sebastian',whatNeed:'What do you need for tomorrow?',add:'Add item',cutoff:'Cut-off',left:'left',closed:'Closed for today. New items go on tomorrow\'s list.',
   edit:'Change',today:'Today',orderTab:'Order',history:'History',byItem:'By item',byDate:'By date',byMember:'By member',byPerson:'By person',leave:'Leave project',
   emptyMine:'Your list is empty',emptyMineP:'Type what you need above, for example “Wago 221-413 ×20”. The lead sees it right away.',
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
   copyNo:'Copy number',noNumber:'No article number yet',copiedShort:'Copied',cancel:'Cancel',saveEdit:'Save',itemText:'Item',editRow:'Edit',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
-  copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
+  copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',carried:'Carried over',forTomorrow:'For tomorrow',addedTomorrow:'Added for tomorrow',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
   nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noFavs:'No favorites yet',noFavsP:'Tap the star on an item to keep it here. Tap a favorite to add it to today.',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
@@ -320,12 +321,12 @@ var T={
  sv:{tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
-  pidPh:'t.ex. VASA-12',namePh:'t.ex. Sebastian',whatNeed:'Vad behöver du till i morgon?',add:'Lägg till',cutoff:'Sista beställning',left:'kvar',closed:'Stängt för i dag. Nya rader markeras som sena.',
+  pidPh:'t.ex. VASA-12',namePh:'t.ex. Sebastian',whatNeed:'Vad behöver du till i morgon?',add:'Lägg till',cutoff:'Sista beställning',left:'kvar',closed:'Stängt för i dag. Nya rader hamnar på morgondagens lista.',
   edit:'Ändra',today:'Idag',orderTab:'Beställ',history:'Historik',byItem:'Per artikel',byDate:'Per datum',byMember:'Per medlem',byPerson:'Per person',leave:'Lämna projektet',
   emptyMine:'Din lista är tom',emptyMineP:'Skriv vad du behöver ovan, till exempel ”Wago 221-413 ×20”. Ledaren ser det direkt.',
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
   copyNo:'Kopiera nummer',noNumber:'Inget artikelnummer än',copiedShort:'Kopierat',cancel:'Avbryt',saveEdit:'Spara',itemText:'Artikel',editRow:'Ändra',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
-  copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
+  copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',carried:'Överförd',forTomorrow:'Till i morgon',addedTomorrow:'Tillagd till i morgon',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
   nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noFavs:'Inga favoriter än',noFavsP:'Tryck på stjärnan på en artikel för att spara den här. Tryck på en favorit för att lägga till den idag.',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
@@ -558,13 +559,13 @@ function askDeleteSup(id){
 
 async function addItem(text,qty,article){
   text=(text||'').trim();if(!text||!S.canWrite)return false;
-  var q=Math.max(1,Math.min(999,qty|0||1)),late=isLate(),clean=text.slice(0,120),art=(article||'').trim().slice(0,30);
+  var q=Math.max(1,Math.min(999,qty|0||1)),late=isLate(),day=late?tomorrow():today(),clean=text.slice(0,120),art=(article||'').trim().slice(0,30);
   try{
     if(S.local){
-      S.items.push({id:newId(),pid:S.session.pid,date:today(),text:clean,key:norm(clean),qty:q,by:S.session.name,at:new Date().toISOString(),late:late,article:art,ordered:false});
+      S.items.push({id:newId(),pid:S.session.pid,date:day,text:clean,key:norm(clean),qty:q,by:S.session.name,at:new Date().toISOString(),late:late,article:art,ordered:false});
       render();
     }else{
-      var row={company_id:S.session.co,project_id:S.session.pid,day:today(),text:clean,qty:q,late:late};
+      var row={company_id:S.session.co,project_id:S.session.pid,day:day,text:clean,qty:q,late:late};
       if(art)row.article=art;
       /* insert and read the saved row back in one call, then add just that row */
       var r=await sb.from('items').insert(row).select();
@@ -572,7 +573,7 @@ async function addItem(text,qty,article){
       if(r.data&&r.data[0]){upsertItem(mapRow(r.data[0]));render();}
       else refetch(S.gen,true);
     }
-    toast(t('addedToast')+': '+clean);return true;
+    toast(late?t('addedTomorrow')+': '+clean:t('addedToast')+': '+clean);return true;
   }catch(e){toast(t('errWrite'));return false;}
 }
 async function patch(id,data){
@@ -723,8 +724,8 @@ function groups(items){
   var m={},order=[];
   items.forEach(function(i){
     var k=i.key||norm(i.text),g=m[k];
-    if(!g){g=m[k]={key:k,text:i.text,qty:0,entries:[],article:'',ordered:true,late:false};order.push(g);}
-    g.qty+=(+i.qty||1);g.entries.push(i);if(i.article&&!g.article)g.article=i.article;if(!i.ordered)g.ordered=false;if(i.late)g.late=true;
+    if(!g){g=m[k]={key:k,text:i.text,qty:0,entries:[],article:'',ordered:true,late:false,carried:false};order.push(g);}
+    g.qty+=(+i.qty||1);g.entries.push(i);if(i.article&&!g.article)g.article=i.article;if(!i.ordered)g.ordered=false;if(i.late)g.late=true;if(isCarried(i))g.carried=true;
   });
   return order;
 }
@@ -1114,16 +1115,21 @@ function emptyState(title,p){
   return h('div',{class:'empty'},h('span',{html:'<svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="14" y="26" width="68" height="52" rx="12" fill="var(--accent-soft)"/><path d="M30 26v-6a18 18 0 0136 0v6" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M40 52l6 6 12-13" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}),
     h('h2',null,title),h('p',null,p));
 }
-function todays(){var d=today();return S.items.filter(function(i){return i.date===d;});}
+/* today's list: items for today plus anything from an earlier day that is still not ordered (carried over) */
+function isCarried(i){return i.date<today();}
+function todays(){var d=today();return S.items.filter(function(i){return i.date===d||(i.date<d&&!i.ordered);});}
+/* items added after the cut-off sit on tomorrow's list */
+function nextDays(){var d=today();return S.items.filter(function(i){return i.date>d;});}
 
 /* electrician: my list */
 function renderMine(){
-  var mine=todays().filter(function(i){return i.by===S.session.name;}).sort(function(a,b){return (b.at||'').localeCompare(a.at||'');});
+  var mine=todays().concat(nextDays()).filter(function(i){return i.by===S.session.name;}).sort(function(a,b){return (b.at||'').localeCompare(a.at||'');});
   if(!mine.length)return emptyState(t('emptyMine'),t('emptyMineP'));
   var list=h('div',{class:'list'});
   mine.forEach(function(it){
     var meta=h('div',{class:'meta'},hhmm(it.at));
-    if(it.late)meta.append(h('span',{class:'pill late'},t('late')));
+    if(it.date>today())meta.append(h('span',{class:'pill late'},t('forTomorrow')));
+    else if(isCarried(it))meta.append(h('span',{class:'pill late'},t('carried')));
     if(it.ordered)meta.append(h('span',{class:'pill ok'},icon('check'),t('ordered')));
     if(it.article)meta.append(h('span',{class:'pill art'},it.article));
     var acts=h('div',{class:'acts'});
@@ -1205,7 +1211,8 @@ function groupCard(g,locked){
     meta.append(h('span',{class:'pill who'},p.by+' ×'+p.qty,
       S.canWrite?h('button',{type:'button',class:'x'+(sure?' sure':''),'aria-label':t('delOne')+': '+p.by,title:sure?t('delSure'):t('delOne'),onclick:function(){askDelete(k,ids);}},sure?t('delSure'):icon('x')):null));
   });
-  if(g.late)meta.append(h('span',{class:'pill late'},t('late')));
+  if(g.carried)meta.append(h('span',{class:'pill late'},t('carried')));
+  else if(g.late)meta.append(h('span',{class:'pill late'},t('late')));
   var art=h('span',{class:'artno'+(g.article?' copy':' none'),title:g.article?t('copyNo'):t('noNumber'),onclick:g.article?function(){copyText(g.article);}:null},g.article||'–');
   var kk='g:'+g.key,sureG=S.confirm===kk;
   var ek='g:e:'+g.key;
@@ -1223,7 +1230,7 @@ function renderPeople(all){
   o.forEach(function(n){
     var items=m[n],card=h('div',{class:'person'},h('h3',null,h('div',{class:'av'},(n[0]||'?').toUpperCase()),n,h('span',{class:'n'},items.length+' '+t('itemsN').toLowerCase())));
     items.forEach(function(i){card.append(h('div',{class:'line'+(i.ordered?' ordered':''),'data-id':i.id},h('span',{class:'q'},'×'+i.qty),h('span',{class:'t'},i.text),
-      i.late?h('span',{class:'pill late'},t('late')):null,i.ordered?h('span',{class:'pill ok'},icon('check')):null,
+      isCarried(i)?h('span',{class:'pill late'},t('carried')):(i.late?h('span',{class:'pill late'},t('late')):null),i.ordered?h('span',{class:'pill ok'},icon('check')):null,
       S.canWrite?h('button',{type:'button',class:'sq del'+(S.confirm==='i:'+i.id?' sure':''),'aria-label':t('delOne'),title:t('delOne'),onclick:function(){askDelete('i:'+i.id,[i.id]);}},S.confirm==='i:'+i.id?t('delSure'):icon('trash')):null));});
     list.append(card);
   });
