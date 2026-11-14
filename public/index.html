@@ -43,7 +43,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--plum);z-index:10}
 .wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer;border:0;background:none}
+button{cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button:not(:disabled):active{filter:brightness(.95)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
 .ic{display:inline-flex;width:1.2em;height:1.2em;flex:none}.ic svg{width:100%;height:100%}
 
