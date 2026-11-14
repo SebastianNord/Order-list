@@ -226,6 +226,9 @@ input.art:focus{outline:none;border-color:var(--accent)}
 #content .line.leaving{animation:leaveline .4s cubic-bezier(.2,.8,.2,1) forwards;overflow:hidden;pointer-events:none}
 .card.checked{animation:checked .6s cubic-bezier(.34,1.56,.64,1)}
 .card.checked .ord .ic,.card.checked .qty{animation:tick .55s cubic-bezier(.34,1.56,.64,1)}
+.step output,.mini output{display:inline-block}
+.bump{animation:bump .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bump{40%{transform:scale(1.4)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:520px){.acts{margin-left:0;width:100%}.card{padding:14px}}
 </style>
@@ -275,6 +278,7 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 function reduced(){return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}
 function buzz(ms){if(!reduced()&&navigator.vibrate){try{navigator.vibrate(ms);}catch(e){}}}
 var checked={};
+function replay(el,cls){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
 /* slide a card (or all cards of a group) out and collapse the gap, then resolve; the data is removed after */
 function leaveAnim(ids){
   if(reduced())return Promise.resolve();
@@ -586,9 +590,9 @@ async function patch(id,data){
 function paintQty(it){
   var card=document.querySelector('[data-id="'+it.id+'"]');
   if(!card){render();return;}
-  var o=card.querySelector('.mini output');if(o)o.textContent=String(it.qty);
+  var o=card.querySelector('.mini output');if(o){o.textContent=String(it.qty);replay(o,'bump');}
   var box=card.querySelector('.qty');
-  if(box){var qb=box.querySelector('.qb');if(qb)qb.textContent='×'+it.qty;else box.textContent='×'+it.qty;}
+  if(box){var qb=box.querySelector('.qb');if(qb)qb.textContent='×'+it.qty;else box.textContent='×'+it.qty;replay(box,'bump');}
   if(!S.dirty)lastSig=sig();
 }
 function bumpQty(id,d){
@@ -915,7 +919,7 @@ function start(sess){
 function leave(){ls('ol.session',null);showJoin();}
 
 var qtyOut;
-function setQty(n){S.qty=Math.max(1,Math.min(999,n));if(qtyOut)qtyOut.textContent=S.qty;}
+function setQty(n){var old=S.qty;S.qty=Math.max(1,Math.min(999,n));if(qtyOut){qtyOut.textContent=S.qty;if(S.qty!==old)replay(qtyOut,'bump');}}
 
 /* suggestions: items already added in this project (loaded history), most used first, max 5.
    Items already on my own list for today are hidden. */
@@ -1256,7 +1260,7 @@ async function saveCsv(){
    Pick a quantity (starts at 1) and add it to today's order. */
 function histCard(x,fav){
   var out=h('output',null,String(S.hq[x.id]||1));
-  function set(n){S.hq[x.id]=Math.max(1,Math.min(999,n));out.textContent=S.hq[x.id];}
+  function set(n){S.hq[x.id]=Math.max(1,Math.min(999,n));out.textContent=S.hq[x.id];replay(out,'bump');}
   function add(){var q=S.hq[x.id]||1;S.hq[x.id]=1;out.textContent='1';addItem(x.text,q,x.article);}
   var meta=h('div',{class:'meta'},fav?null:hhmm(x.at));
   if(fav){}
