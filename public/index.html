@@ -90,11 +90,8 @@ button{cursor:pointer;border:0;background:none}
 .step button{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:var(--fg)}
 .step button:hover{background:var(--line)}
 .step output{min-width:2.2ch;text-align:center;font-weight:600;font-variant-numeric:tabular-nums}
-.go{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 16px rgba(217,79,168,.45);transition:transform .4s var(--spring),box-shadow .3s}
-.go:hover{transform:scale(1.08)}.go:active{transform:scale(.84);box-shadow:0 2px 6px rgba(217,79,168,.4)}
-.go.boom{animation:boom .6s var(--spring)}.go.boom .ic{animation:spin .6s var(--spring)}
-@keyframes boom{0%{transform:scale(1)}30%{transform:scale(.8)}65%{transform:scale(1.18)}100%{transform:scale(1)}}
-@keyframes spin{from{transform:rotate(-135deg) scale(.5)}to{transform:none}}
+.go{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 16px rgba(217,79,168,.45);transition:transform .12s ease-out,box-shadow .2s}
+.go:hover{transform:scale(1.04)}.go:active{transform:scale(.94);box-shadow:0 2px 6px rgba(217,79,168,.4)}
 .go .ic{width:28px;height:28px}
 .go:disabled,.bar input:disabled{opacity:.5;cursor:not-allowed}
 .favs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
@@ -220,9 +217,9 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .form.supform{box-shadow:var(--shadow);margin-top:20px;max-width:none}
 
 /* motion: springy and bold. Everything here is switched off by the reduced-motion rule below. */
-button{transition:transform .35s var(--spring),background-color .25s,color .25s,filter .2s;-webkit-tap-highlight-color:transparent}
-button:not(:disabled):active{transform:scale(.9)}
-.tab,.chip,.btn,.ord,.role,.sq,.seg button,.supchips button{transition:transform .35s var(--spring),background-color .25s,color .25s,border-color .25s,filter .2s}
+button{transition:transform .12s ease-out,background-color .25s,color .25s,filter .2s;-webkit-tap-highlight-color:transparent}
+button:not(:disabled):active{transform:scale(.96)}
+.tab,.chip,.btn,.ord,.role,.sq,.seg button,.supchips button{transition:transform .12s ease-out,background-color .25s,color .25s,border-color .25s,filter .2s}
 body,.card,.tile,.person,.form,.empty,.banner,.pill,.qty,.top,.join,.foot .grp{transition:background-color .4s,color .4s,border-color .4s,box-shadow .4s}
 .step output,.mini output{display:inline-block}
 .bump{animation:bump .4s var(--spring)}
@@ -1037,7 +1034,7 @@ function buildShell(){
     e.preventDefault();
     var art=norm(input.value)===norm(S.pickText||'')?S.pickArt:'';
     var ok=await addItem(input.value,S.qty,art);
-    if(ok){input.value='';S.pickText='';S.pickArt='';closeSug();setQty(1);input.focus();replay(go,'boom');buzz(14);}
+    if(ok){input.value='';S.pickText='';S.pickArt='';closeSug();setQty(1);input.focus();buzz(14);}
   }},
     input,
     h('div',{class:'step',role:'group','aria-label':'Quantity'},
