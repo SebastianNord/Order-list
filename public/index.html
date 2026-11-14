@@ -209,6 +209,24 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .supchips button{padding:7px 14px;border-radius:999px;background:var(--surface2);font-weight:600;font-size:13px}
 .supchips button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
 .form.supform{box-shadow:var(--shadow);margin-top:20px;max-width:none}
+/* motion: only add, remove and mark as ordered animate; switched off by the reduced-motion rule */
+.card.fresh{animation:pop .55s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:translateY(-18px) scale(.88);opacity:0}to{transform:none;opacity:1}}
+@keyframes leave{
+  0%{opacity:1;transform:none;height:var(--h)}
+  45%{opacity:0;transform:translateX(60px) scale(.9);height:var(--h)}
+  100%{opacity:0;transform:translateX(60px) scale(.9);height:0;padding-block:0;margin-top:-10px}}
+@keyframes leaveline{
+  0%{opacity:1;transform:none;height:var(--h)}
+  50%{opacity:0;transform:translateX(40px);height:var(--h)}
+  100%{opacity:0;transform:translateX(40px);height:0;padding-block:0;border-top-width:0}}
+@keyframes checked{0%{transform:scale(1)}35%{transform:scale(1.04);box-shadow:0 0 0 6px var(--ok-soft)}100%{transform:none}}
+@keyframes tick{from{transform:scale(0) rotate(-60deg)}to{transform:none}}
+#content .card.leaving{animation:leave .4s cubic-bezier(.2,.8,.2,1) forwards;overflow:hidden;pointer-events:none}
+#content .line.leaving{animation:leaveline .4s cubic-bezier(.2,.8,.2,1) forwards;overflow:hidden;pointer-events:none}
+.card.checked{animation:checked .6s cubic-bezier(.34,1.56,.64,1)}
+.card.checked .ord .ic,.card.checked .qty{animation:tick .55s cubic-bezier(.34,1.56,.64,1)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:520px){.acts{margin-left:0;width:100%}.card{padding:14px}}
 </style>
 </head>
@@ -254,7 +272,21 @@ function norm(s){return s.toLowerCase().replace(/\s+/g,' ').trim();}
 function slug(s){return Array.from(norm(s)).map(function(c){return /[a-z0-9]/.test(c)?c:'_'+c.charCodeAt(0).toString(16);}).join('').slice(0,120)||'x';}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show');},2600);}
 
-function buzz(ms){if(navigator.vibrate){try{navigator.vibrate(ms);}catch(e){}}}
+function reduced(){return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}
+function buzz(ms){if(!reduced()&&navigator.vibrate){try{navigator.vibrate(ms);}catch(e){}}}
+var checked={};
+/* slide a card (or all cards of a group) out and collapse the gap, then resolve; the data is removed after */
+function leaveAnim(ids){
+  if(reduced())return Promise.resolve();
+  var els=[];
+  Array.prototype.forEach.call(document.querySelectorAll('[data-id],[data-ids]'),function(e){
+    var mine=(e.getAttribute('data-ids')||e.getAttribute('data-id')).split(',');
+    if(mine.every(function(x){return ids.indexOf(x)>=0;}))els.push(e);
+  });
+  if(!els.length)return Promise.resolve();
+  els.forEach(function(e){e.style.setProperty('--h',e.offsetHeight+'px');e.classList.add('leaving');});
+  return new Promise(function(r){setTimeout(r,400);});
+}
 
 /* ---------- text ---------- */
 var T={
@@ -537,7 +569,7 @@ async function addItem(text,qty,article){
 }
 async function patch(id,data){
   if(busy[id])return;busy[id]=1;
-  if(data.ordered===true)buzz(20);
+  if(data.ordered===true){checked[id]=1;buzz(20);}
   try{
     var it=S.items.find(function(i){return i.id===id;});
     if(it){var loc=Object.assign({},data);if('supplier_id' in loc){loc.sup=loc.supplier_id;delete loc.supplier_id;}Object.assign(it,loc);}
@@ -583,7 +615,7 @@ async function flushQty(id){
 }
 async function removeMany(ids){
   try{
-    buzz(8);
+    buzz(8);await leaveAnim(ids);
     S.items=S.items.filter(function(x){return ids.indexOf(x.id)<0;});S.confirm=null;render();
     if(!S.local){
       var r=await sb.from('items').delete().in('id',ids);
@@ -1178,7 +1210,9 @@ function groupCard(g,locked){
   var ek='g:e:'+g.key;
   if(S.edit===ek)return h('div',{class:'card'},editForm(g.entries.map(function(e){return e.id;}),g.text,g.article,S.canWrite?kk:null));
   var ord=h('button',{type:'button',class:'ord'+(g.ordered?' on':''),'aria-pressed':String(g.ordered),disabled:(!S.canWrite||(locked&&!g.ordered))||null,onclick:function(){setForGroup(g,{ordered:!g.ordered});}},icon('check'),g.ordered?t('ordered'):t('markOrdered'));
-  return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title copy',onclick:function(){copyText(g.text);}},g.text),meta),
+  var chk=g.ordered&&g.entries.some(function(e){return checked[e.id];});
+  if(chk)g.entries.forEach(function(e){delete checked[e.id];});
+  return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')+(chk?' checked':''),'data-ids':g.entries.map(function(e){return e.id;}).join(',')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title copy',onclick:function(){copyText(g.text);}},g.text),meta),
     h('div',{class:'acts'},art,S.canWrite?editBtn(ek,'wide'):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord));
 }
 function renderPeople(all){
@@ -1187,7 +1221,7 @@ function renderPeople(all){
   var list=h('div',{class:'list'});
   o.forEach(function(n){
     var items=m[n],card=h('div',{class:'person'},h('h3',null,h('div',{class:'av'},(n[0]||'?').toUpperCase()),n,h('span',{class:'n'},items.length+' '+t('itemsN').toLowerCase())));
-    items.forEach(function(i){card.append(h('div',{class:'line'+(i.ordered?' ordered':'')},h('span',{class:'q'},'×'+i.qty),h('span',{class:'t'},i.text),
+    items.forEach(function(i){card.append(h('div',{class:'line'+(i.ordered?' ordered':''),'data-id':i.id},h('span',{class:'q'},'×'+i.qty),h('span',{class:'t'},i.text),
       i.late?h('span',{class:'pill late'},t('late')):null,i.ordered?h('span',{class:'pill ok'},icon('check')):null,
       S.canWrite?h('button',{type:'button',class:'sq del'+(S.confirm==='i:'+i.id?' sure':''),'aria-label':t('delOne'),title:t('delOne'),onclick:function(){askDelete('i:'+i.id,[i.id]);}},S.confirm==='i:'+i.id?t('delSure'):icon('trash')):null));});
     list.append(card);
