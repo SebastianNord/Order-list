@@ -1,0 +1,6 @@
+{
+  "name": "order-list",
+  "compatibility_date": "2026-11-13",
+  "assets": { "directory": "./public" },
+  "previews": {}
+}
