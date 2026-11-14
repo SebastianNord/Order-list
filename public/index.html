@@ -138,6 +138,7 @@ main{padding-block:22px 80px}
 .pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--surface2);color:var(--muted)}
 .pill.ok{background:var(--ok-soft);color:var(--ok)}.done .pill.ok{background:var(--surface);}
 .pill.late{background:var(--warn-soft);color:var(--warn)}
+.pill.carry{background:var(--surface2);color:var(--fg);box-shadow:inset 0 0 0 1.5px var(--warn)}
 .pill.who{background:var(--surface2);color:var(--fg)}
 .pill.art{font-family:var(--mono);background:var(--surface2);color:var(--fg)}
 .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
@@ -306,7 +307,7 @@ var T={
   emptyMine:'Your list is empty',emptyMineP:'Type what you need above, for example “Wago 221-413 ×20”. The lead sees it right away.',
   emptyLead:'Nobody has added anything yet',emptyLeadP:'Items from everyone on the project show up here, merged and ready to order.',
   copyNo:'Copy number',noNumber:'No article number yet',copiedShort:'Copied',cancel:'Cancel',saveEdit:'Save',itemText:'Item',editRow:'Edit',article:'Art. no.',ordered:'Ordered',markOrdered:'Mark ordered',markAll:'Mark all ordered',copyCsv:'Copy CSV',saveCsv:'Save CSV',
-  copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
+  copied:'Copied. Paste it into your order.',saved:'File saved.',late:'Late',unordered:'Unordered',itemsN:'Items',peopleN:'People',pendingN:'To order',orderedN:'Ordered',
   nothingPending:'Nothing left to order.',allDone:'All done for today',allDoneP:'Everything is ordered. Nice work.',addAgain:'Add again',noFavs:'No favorites yet',noFavsP:'Tap the star on an item to keep it here. Tap a favorite to add it to today.',noHistory:'No items yet',noHistoryP:'Every item added in this project shows up here, so you can add it again.',histLoading:'Loading items…',
   demoBanner:'Demo project with made-up colleagues. Nothing here is saved.',readOnly:'You can view this list but not change it. Ask the owner for contributor access.',
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
@@ -325,7 +326,7 @@ var T={
   emptyMine:'Din lista är tom',emptyMineP:'Skriv vad du behöver ovan, till exempel ”Wago 221-413 ×20”. Ledaren ser det direkt.',
   emptyLead:'Ingen har lagt in något än',emptyLeadP:'Rader från alla i projektet dyker upp här, ihopslagna och redo att beställas.',
   copyNo:'Kopiera nummer',noNumber:'Inget artikelnummer än',copiedShort:'Kopierat',cancel:'Avbryt',saveEdit:'Spara',itemText:'Artikel',editRow:'Ändra',article:'Art.nr',ordered:'Beställd',markOrdered:'Markera beställd',markAll:'Markera alla beställda',copyCsv:'Kopiera CSV',saveCsv:'Spara CSV',
-  copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
+  copied:'Kopierat. Klistra in i beställningen.',saved:'Filen sparades.',late:'Sen',unordered:'Obeställd',itemsN:'Artiklar',peopleN:'Personer',pendingN:'Att beställa',orderedN:'Beställda',
   nothingPending:'Inget kvar att beställa.',allDone:'Klart för i dag',allDoneP:'Allt är beställt. Bra jobbat.',addAgain:'Lägg till igen',noFavs:'Inga favoriter än',noFavsP:'Tryck på stjärnan på en artikel för att spara den här. Tryck på en favorit för att lägga till den idag.',noHistory:'Inga artiklar än',noHistoryP:'Alla artiklar som lagts till i projektet visas här så att du kan lägga till dem igen.',histLoading:'Laddar artiklar…',
   demoBanner:'Demoprojekt med påhittade kollegor. Inget här sparas.',readOnly:'Du kan se listan men inte ändra den. Be ägaren om bidragsgivare-behörighet.',
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
@@ -386,7 +387,7 @@ function softRender(){clearTimeout(renderT);renderT=setTimeout(render,40);}
 /* full reload. itemsOnly skips the project settings call (used when rolling back a failed save). */
 async function refetch(gen,itemsOnly){
   if(S.demo||!S.session||!sb)return;
-  var pid=S.session.pid,co=S.session.co,since=dstr(new Date(Date.now()-8*864e5));
+  var pid=S.session.pid,co=S.session.co,since=dstr(new Date(Date.now()-30*864e5));
   try{
     var a=await sb.from('items').select('*').eq('company_id',co).eq('project_id',pid).gte('day',since).order('created_at',{ascending:true}).limit(1000);
     if(gen!==S.gen)return;
@@ -697,7 +698,7 @@ function demoItems(){
     mk(d,'Lisa','EKK 3G1,5 kabel 100 m',2),mk(d,'Amir','Uttag 2-vägs infälld vit',6),
     mk(d,'Marcus','Elektrikertejp svart',5,{ordered:true}),mk(d,'Johan','Dosa 1-fack kapp',12),
     mk(d,'Lisa','Skruv 4x40 trä',1,{late:true}),
-    mk(y,'Johan','Kabelklammer 8 mm',50),mk(y,'Amir','Wago 221-413 kopplingsplint',30),mk(y,'Lisa','Bits PZ2',2),mk(y,'Marcus','Dosa 1-fack kapp',20)
+    mk(y,'Johan','Kabelklammer 8 mm',50),mk(y,'Amir','Wago 221-413 kopplingsplint',30),mk(y,'Lisa','Bits PZ2',2,{late:true}),mk(y,'Marcus','Dosa 1-fack kapp',20)
   ];
 }
 
@@ -918,7 +919,7 @@ function start(sess){
   S.session=sess;S.edit=null;S.demo=(sess.pid==='DEMO');S.tab='today';S.view='item';S.cutoff='15:00';S.editCut=false;S.csvText=null;
   ls('ol.session',JSON.stringify(sess));
   buildShell();connect();
-  clearInterval(tick);tick=setInterval(updateCut,30000);
+  clearInterval(tick);tick=setInterval(function(){updateCut();render();},30000);
 }
 function leave(){ls('ol.session',null);showJoin();}
 
@@ -1114,7 +1115,23 @@ function emptyState(title,p){
   return h('div',{class:'empty'},h('span',{html:'<svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="14" y="26" width="68" height="52" rx="12" fill="var(--accent-soft)"/><path d="M30 26v-6a18 18 0 0136 0v6" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M40 52l6 6 12-13" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}),
     h('h2',null,title),h('p',null,p));
 }
-function todays(){var d=today();return S.items.filter(function(i){return i.date===d;});}
+/* today's list: items added today, plus anything from earlier days that is still not ordered (moves over at midnight) */
+function todays(){var d=today();return S.items.filter(function(i){return i.date===d||(i.date<d&&!i.ordered);});}
+function shortDate(ds){var p=ds.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(lang==='sv'?'sv-SE':'en-GB',{day:'numeric',month:'short'});}
+/* pills for a set of entries: "Late" (added after cut-off; with its date once it has moved to a later day)
+   or "Unordered" + date (carried over, not late). Same-day late items get "Late" without a date. */
+function pillsFor(entries){
+  var d=today(),seen={},out=[];
+  entries.forEach(function(e){
+    var moved=e.date<d,kind=e.late?'late':(moved?'unordered':null);
+    if(!kind)return;
+    var k=kind+'|'+(moved?e.date:''),dt=moved?e.date:'';
+    if(seen[k])return;seen[k]=1;out.push({kind:kind,date:dt});
+  });
+  return out.sort(function(a,b){return a.date.localeCompare(b.date);}).map(function(p){
+    return h('span',{class:'pill '+(p.kind==='late'?'late':'carry')},t(p.kind)+(p.date?' '+shortDate(p.date):''));
+  });
+}
 
 /* electrician: my list */
 function renderMine(){
@@ -1123,7 +1140,7 @@ function renderMine(){
   var list=h('div',{class:'list'});
   mine.forEach(function(it){
     var meta=h('div',{class:'meta'},hhmm(it.at));
-    if(it.late)meta.append(h('span',{class:'pill late'},t('late')));
+    pillsFor([it]).forEach(function(x){meta.append(x);});
     if(it.ordered)meta.append(h('span',{class:'pill ok'},icon('check'),t('ordered')));
     if(it.article)meta.append(h('span',{class:'pill art'},it.article));
     var acts=h('div',{class:'acts'});
@@ -1205,7 +1222,7 @@ function groupCard(g,locked){
     meta.append(h('span',{class:'pill who'},p.by+' ×'+p.qty,
       S.canWrite?h('button',{type:'button',class:'x'+(sure?' sure':''),'aria-label':t('delOne')+': '+p.by,title:sure?t('delSure'):t('delOne'),onclick:function(){askDelete(k,ids);}},sure?t('delSure'):icon('x')):null));
   });
-  if(g.late)meta.append(h('span',{class:'pill late'},t('late')));
+  pillsFor(g.entries).forEach(function(x){meta.append(x);});
   var art=h('span',{class:'artno'+(g.article?' copy':' none'),title:g.article?t('copyNo'):t('noNumber'),onclick:g.article?function(){copyText(g.article);}:null},g.article||'–');
   var kk='g:'+g.key,sureG=S.confirm===kk;
   var ek='g:e:'+g.key;
@@ -1223,7 +1240,7 @@ function renderPeople(all){
   o.forEach(function(n){
     var items=m[n],card=h('div',{class:'person'},h('h3',null,h('div',{class:'av'},(n[0]||'?').toUpperCase()),n,h('span',{class:'n'},items.length+' '+t('itemsN').toLowerCase())));
     items.forEach(function(i){card.append(h('div',{class:'line'+(i.ordered?' ordered':''),'data-id':i.id},h('span',{class:'q'},'×'+i.qty),h('span',{class:'t'},i.text),
-      i.late?h('span',{class:'pill late'},t('late')):null,i.ordered?h('span',{class:'pill ok'},icon('check')):null,
+      pillsFor([i]),i.ordered?h('span',{class:'pill ok'},icon('check')):null,
       S.canWrite?h('button',{type:'button',class:'sq del'+(S.confirm==='i:'+i.id?' sure':''),'aria-label':t('delOne'),title:t('delOne'),onclick:function(){askDelete('i:'+i.id,[i.id]);}},S.confirm==='i:'+i.id?t('delSure'):icon('trash')):null));});
     list.append(card);
   });
