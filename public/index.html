@@ -301,7 +301,7 @@ function leaveAnim(ids){
 
 /* ---------- text ---------- */
 var T={
- en:{tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
+ en:{newHere:'New here',codeFromLead:'The code your lead gave you.',haveJoined:'Joined before? Use project ID and name instead',backNew:'New here? Use the join code',imLead:'I am a lead, or my company is not added yet',backSimple:'Back',errNoMember:'No electrician with that name in that project. New here? Use the join code from your lead.',chooseCo:'Which company?',needJoinCode:'Enter the join code from your lead.',tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
   projectId:'Project ID',yourName:'Your name',role:'I am',electrician:'Electrician',leadRole:'Lead electrician',join:'Join project',demo:'Look around with a demo project',
   demoHint:'The demo uses made-up colleagues. Nothing is saved.',needName:'Enter your name.',needPid:'Enter a project ID, for example VASA-12.',
   pidPh:'e.g. VASA-12',namePh:'e.g. Sebastian',whatNeed:'What do you need for tomorrow?',add:'Add item',cutoff:'Cut-off',left:'left',closed:'Closed for today. New items are marked late.',
@@ -320,7 +320,7 @@ var T={
   supAdd:'Add your own supplier',supEditTitle:'Change supplier',supName:'Supplier name',supNamePh:'e.g. Elgrossisten',supUrl:'Search link',supUrlPh:'https://www.example.se/search?q={q}',supUrlHint:'Use {q} where the article number or search word goes. You confirm each match by hand.',
   supSave:'Save supplier',supCancel:'Cancel',needSupName:'Enter a supplier name (2 to 40 characters).',errSupUrl:'The link must start with https:// and contain {q}.',supDup:'You already have a supplier with that name.',supSaved:'Supplier saved',supDeleted:'Supplier deleted',
   pickDefault:'Choose a default supplier for this project before ordering.',pickDefaultBtn:'Choose supplier',findAt:'Find at',useDefault:'Default',supplierFor:'Supplier for',allSup:'All suppliers',noSup:'No supplier'},
- sv:{tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
+ sv:{newHere:'Ny här',codeFromLead:'Koden du fått av din ledare.',haveJoined:'Varit med förut? Använd projekt-ID och namn istället',backNew:'Ny här? Använd gå med-koden',imLead:'Jag är arbetsledare, eller mitt företag är inte tillagt',backSimple:'Tillbaka',errNoMember:'Ingen elektriker med det namnet i projektet. Ny här? Använd gå med-koden från din ledare.',chooseCo:'Vilket företag?',needJoinCode:'Skriv gå med-koden från din ledare.',tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
   pidPh:'t.ex. VASA-12',namePh:'t.ex. Sebastian',whatNeed:'Vad behöver du till i morgon?',add:'Lägg till',cutoff:'Sista beställning',left:'kvar',closed:'Stängt för i dag. Nya rader markeras som sena.',
@@ -768,8 +768,77 @@ function hhmm(iso){var d=new Date(iso);return isNaN(d)?'':pad(d.getHours())+':'+
 function dayLabel(ds){return new Date(ds+'T12:00:00').toLocaleDateString(lang==='sv'?'sv-SE':'en-GB',{weekday:'long',day:'numeric',month:'short'});}
 
 /* ---------- screens ---------- */
+/* simple join: name + the project's join code (first time), or project ID + name (joined before) */
 function showJoin(){
-  S.session=null;S.gen++;stopSync();clearInterval(tick);
+  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=false;
+  var mode='new',picked=null;
+  var name=h('input',{type:'text',id:'uname',autocomplete:'given-name',placeholder:t('namePh'),maxlength:'30'});
+  var code=h('input',{type:'text',id:'jcode',autocomplete:'off',autocapitalize:'characters',spellcheck:'false',placeholder:t('joinCodePh'),maxlength:'12'});
+  var codeBox=h('label',{for:'jcode'},t('joinCode'),code,h('p',{class:'hint'},t('codeFromLead')));
+  var pid=h('input',{type:'text',id:'pid',autocomplete:'off',autocapitalize:'characters',placeholder:t('pidPh'),maxlength:'24'});
+  var pidBox=h('label',{for:'pid',hidden:true},t('projectId'),pid);
+  var chooseBox=h('div',{class:'addbox',hidden:true});
+  var err=h('div',{class:'err',role:'alert'});
+  var btn=h('button',{type:'submit',class:'go2'},t('join'),icon('plus'));
+  var swap=h('button',{type:'button',class:'linkbtn',onclick:function(){setMode(mode==='new'?'back':'new');}},t('haveJoined'));
+  function setMode(m){
+    mode=m;picked=null;codeBox.hidden=(m!=='new');pidBox.hidden=(m!=='back');chooseBox.hidden=true;err.textContent='';
+    swap.textContent=t(m==='new'?'haveJoined':'backNew');
+  }
+  function joinErr(e){
+    var m=String((e&&e.message)||'');
+    if(m.indexOf('wrong_join_code')>=0)return t('errJoinCode');
+    if(m.indexOf('company_pending')>=0)return t('errPending');
+    if(m.indexOf('company_rejected')>=0)return t('coRejected');
+    if(m.indexOf('rejoin_not_found')>=0)return t('errNoMember');
+    if(m.indexOf('bad_project_id')>=0)return t('needPid');
+    if(m.indexOf('bad_name')>=0)return t('needName');
+    return t('errServer');
+  }
+  async function go(isDemo){
+    var n=name.value.trim();
+    err.textContent='';
+    if(isDemo){start({co:'DEMO',coName:'Demo',pid:'DEMO',name:n||'Demo',role:'electrician'});return;}
+    if(!n){err.textContent=t('needName');name.focus();return;}
+    var c=code.value.replace(/[^A-Za-z0-9]/g,''),p=pid.value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
+    if(mode==='new'&&c.length<4){err.textContent=t('needJoinCode');code.focus();return;}
+    if(mode==='back'&&p.length<2){err.textContent=t('needPid');pid.focus();return;}
+    if(!sb){err.textContent=t('errServer');return;}
+    btn.disabled=true;
+    try{
+      await ensureAuth();
+      var r=mode==='new'?await sb.rpc('join_with_code',{p_code:c,p_name:n}):await sb.rpc('rejoin_project',{p_id:p,p_name:n,p_company:picked});
+      if(r.error)throw r.error;
+      if(r.data.choose){
+        chooseBox.replaceChildren(h('div',{class:'hint'},t('chooseCo')));
+        r.data.choose.forEach(function(co){chooseBox.append(h('button',{type:'button',class:'sim',onclick:function(){picked=co.org_nr;go(false);}},h('span',{class:'nm'},co.name),h('span',{class:'sa'},fmtOrg(co.org_nr))));});
+        chooseBox.hidden=false;btn.disabled=false;return;
+      }
+      ls('ol.co',JSON.stringify({org_nr:r.data.company_id,name:r.data.company_name}));
+      start({co:r.data.company_id,coName:r.data.company_name,pid:r.data.project_id,name:r.data.name,role:r.data.role});
+    }catch(e){err.textContent=joinErr(e);btn.disabled=false;}
+  }
+  var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go(false);}},
+    h('label',{for:'uname'},t('yourName'),name),
+    codeBox,pidBox,chooseBox,swap,
+    err,btn,
+    h('button',{type:'button',class:'linkbtn',onclick:showFullJoin},t('imLead')),
+    h('button',{type:'button',class:'alt',onclick:function(){go(true);}},t('demo')),
+    h('p',{class:'hint'},t('demoHint')));
+  app.replaceChildren(h('div',{class:'join'},h('div',{class:'wrap'},
+    h('div',{class:'brandrow'},brand(),h('div',{class:'sp'}),langSeg()),
+    h('h1',null,t('tagline')),h('p',{class:'lead'},t('lead')),form)));
+  /* a shared link carries the join code (and project): fill it in, then clear the address bar */
+  var q=new URLSearchParams(location.search),pp=(q.get('p')||'').toUpperCase().replace(/[^A-Z0-9_-]/g,''),j=(q.get('j')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,12);
+  if(pp||j||q.get('c')){
+    try{history.replaceState(null,'',location.pathname);}catch(e){}
+    if(j)code.value=j;
+    else if(pp){pid.value=pp;setMode('back');}
+  }
+}
+
+function showFullJoin(){
+  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=true;
   /* company picker: search stored companies by name or org. number, or add one with its org. number */
   var sel=null,sugItems=[],sugIdx=-1,searchN=0,searchT=null,simT=null,role2=null,roleN=0,inviteNeeded=false;
   try{var lc=JSON.parse(ls('ol.co')||'null');if(lc&&lc.org_nr&&lc.name)sel={org_nr:lc.org_nr,name:lc.name};}catch(e){}
@@ -984,6 +1053,7 @@ function showJoin(){
     }catch(e){err.textContent=joinError(e);btn.disabled=false;}
   }
   var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go(false);}},
+    h('button',{type:'button',class:'linkbtn',onclick:showJoin},t('backSimple')),
     h('div',{class:'cogroup'},h('div',{class:'cobox'},h('label',{for:'company'},t('company'),coIn),coSug),coInfo,openAddBtn,addBox,adminBox,claimLink,claimBox),
     h('label',{for:'pid'},t('projectId'),pid),
     h('label',{for:'uname'},t('yourName'),name),
@@ -1020,7 +1090,7 @@ function langSeg(){
 function setLang(l){
   lang=l;ls('ol.lang',l);
   if(S.session){var v=document.getElementById('itemText');var keep=v?v.value:'';var q=S.qty;buildShell();if(keep)document.getElementById('itemText').value=keep;S.qty=q;setQty(q||1);render();}
-  else showJoin();
+  else if(S.joinFull)showFullJoin();else showJoin();
 }
 
 function start(sess){
