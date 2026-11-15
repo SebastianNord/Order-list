@@ -44,7 +44,19 @@ insert into auth.users (id) values
   ('e1000000-0000-0000-0000-000000000000'), ('e2000000-0000-0000-0000-000000000000'),
   ('a2000000-0000-0000-0000-000000000000'), ('11000000-0000-0000-0000-000000000000'),
   ('51000000-0000-0000-0000-000000000000'), ('b1000000-0000-0000-0000-000000000000');
-insert into public.admins (user_id) values ('c0000000-0000-0000-0000-000000000000');
+insert into public.admins (user_id) values ('c0000000-0000-0000-0000-000000000000') on conflict do nothing;
+
+-- a project from before this change, with one lead and one electrician (skipped if it already exists)
+insert into auth.users (id) values ('00000000-0000-0000-0000-0000000000a1'), ('00000000-0000-0000-0000-0000000000a2')
+  on conflict do nothing;
+insert into public.projects (company_id, id, lead_code_hash)
+  values ('0000000000', 'LEG1', extensions.crypt('legacycode', extensions.gen_salt('bf'))) on conflict do nothing;
+insert into public.members (user_id, company_id, project_id, name, role) values
+  ('00000000-0000-0000-0000-0000000000a1', '0000000000', 'LEG1', 'Old Lead', 'lead'),
+  ('00000000-0000-0000-0000-0000000000a2', '0000000000', 'LEG1', 'Old Sparky', 'electrician')
+  on conflict do nothing;
+insert into public.project_secrets (company_id, project_id, join_code)
+  values ('0000000000', 'LEG1', public.random_code(6)) on conflict do nothing;
 
 do $$
 declare
@@ -199,7 +211,7 @@ begin
   perform t.as_owner();
   perform t.ok((select count(*) from public.company_admins where company_id = '0000000000') = 0,
                'reset with revoke removes the admins');
-  perform t.ok((select count(*) from public.admin_audit where action = 'company_admin_code_reset') = 2,
+  perform t.ok((select count(*) from public.admin_audit where action = 'company_admin_code_reset' and target = '0000000000') = 2,
                'resets are audited, and no code is in the log');
   perform t.ok((select count(*) from public.admin_audit where details::text like '%' || ac || '%') = 0, 'code not in audit log');
 
