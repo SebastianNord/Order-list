@@ -61,7 +61,7 @@ Not secret on purpose: the company list and each company's status are readable b
   plus the `join_project` and `add_company` functions. Schema changes live in
   `supabase/migrations/` and are applied in order: `initial_order_list_schema`,
   `add_company_layer`, `add_suppliers`, `suppliers_grants`,
-  `items_supplier_lead_only`, then the files in `supabase/migrations/` from `20261109221000_add_admin_area` on, including `20261115010000_company_admin_and_join_codes`, `20261115120000_join_with_code` and `20261115140000_company_lead_code_login`.
+  `items_supplier_lead_only`, then the files in `supabase/migrations/` from `20261109221000_add_admin_area` on, including `20261115010000_company_admin_and_join_codes`, `20261115120000_join_with_code` and `20261115140000_company_lead_code_login`, `20261115170000_team_member_list` and `20261115190000_my_access`.
   Apply a new migration **before** deploying the page that needs it.
 - Rollback tests live in `supabase/tests/`. Run one in the SQL editor after its migration; it rolls itself back.
 - Preset suppliers are rows in `suppliers` with `company_id` null. Only the app
@@ -81,6 +81,15 @@ A company admin can save an email on the admin screen. The admin's account is th
 4. **Authentication, Rate Limits:** after step 3, check the emails-per-hour limit. **Providers, Email:** set the OTP expiry to 3600 seconds or less.
 
 Without these steps the admin screen shows "Could not send the email". Everything else keeps working: a lost phone is then fixed by the app owner, who creates a new admin code in `/admin.html`.
+
+## Email and password for members and leads
+
+Anyone can add an email and a password to their account (a banner in the app, and on the lead's project screen). The account is the same user, so the member or lead role stays. On a new phone: **Sign in with email and password** on the first screen. **Forgot password?** sends a 6-digit code; enter it with a new password. Needs the migration `20261115190000_my_access` (the app asks which companies and projects the account belongs to) and the settings above, plus one more:
+
+- **Authentication, Email Templates, Reset Password:** must contain `{{ .Token }}`, for example `<h2>Your reset code</h2><p>{{ .Token }}</p>`.
+- Passwords need at least 8 characters (the app checks this; you can also set the minimum in **Sign In / Providers, Email**).
+
+Existing users keep working without a password and see a banner asking them to add one. Admins who saved an email earlier can set a password with **Forgot password?**.
 
 ## Not built yet
 
