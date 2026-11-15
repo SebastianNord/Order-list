@@ -304,7 +304,7 @@ function leaveAnim(ids){
 
 /* ---------- text ---------- */
 var T={
- en:{codePh2:'Your code',codeLabel:'Code',codeHint2:'Electricians: the join code from your lead. Leads: the company lead code.',errCode:'Wrong code. Ask your lead for the current one.',errTooMany:'Too many wrong codes. Try again in 15 minutes.',imAdmin:'I am the company admin, or my company is not added yet',imAdminTitle:'Company admin',adminScreenHint:'Pick your company. New company: add it below. Then continue to your projects.',continueBtn:'Continue',notAdminYet:'Enter the admin code below first.',leadBack:'Back to projects at',pickProject:'Pick a project, or create a new one.',newProject:'New project',createProject:'Create project',noProjects:'No projects yet. Create the first one.',errProjExists:'That project ID already exists in your company. Pick it from the list.',leadExpired:'Your lead sign-in has expired. Enter the lead code again.',newHere:'New here',codeFromLead:'The code your lead gave you.',haveJoined:'Joined before? Use project ID and name instead',backNew:'New here? Use the join code',imLead:'I am a lead, or my company is not added yet',backSimple:'Back',errNoMember:'No electrician with that name in that project. New here? Use the join code from your lead.',chooseCo:'Which company?',needJoinCode:'Enter the join code from your lead.',tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
+ en:{emailPh:'you@example.com',codePh6:'6-digit code',sendCode:'Send code',confirmCode:'Confirm',codeSent:'We sent a code to your email. It can take a minute.',errEmail:'Enter a valid email address.',errEmailSend:'Could not send the code. Try again in a minute.',errEmailRate:'Too many emails. Wait a few minutes and try again.',errNoAccount:'No admin sign-in is saved for that email.',errCodeWrong:'Wrong or expired code.',emailSaved:'Email saved. You can now sign in on any phone.',signedInEmail:'Signed in.',emailLinked:'Email sign-in is on:',emailReminder:'Save your admin sign-in with your email, so you can sign in again on a new phone.',signinEmail:'Sign in with my email (new phone)',codePh2:'Your code',codeLabel:'Code',codeHint2:'Electricians: the join code from your lead. Leads: the company lead code.',errCode:'Wrong code. Ask your lead for the current one.',errTooMany:'Too many wrong codes. Try again in 15 minutes.',imAdmin:'I am the company admin, or my company is not added yet',imAdminTitle:'Company admin',adminScreenHint:'Pick your company. New company: add it below. Then continue to your projects.',continueBtn:'Continue',notAdminYet:'Enter the admin code below first.',leadBack:'Back to projects at',pickProject:'Pick a project, or create a new one.',newProject:'New project',createProject:'Create project',noProjects:'No projects yet. Create the first one.',errProjExists:'That project ID already exists in your company. Pick it from the list.',leadExpired:'Your lead sign-in has expired. Enter the lead code again.',newHere:'New here',codeFromLead:'The code your lead gave you.',haveJoined:'Joined before? Use project ID and name instead',backNew:'New here? Use the join code',imLead:'I am a lead, or my company is not added yet',backSimple:'Back',errNoMember:'No electrician with that name in that project. New here? Use the join code from your lead.',chooseCo:'Which company?',needJoinCode:'Enter the join code from your lead.',tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
   projectId:'Project ID',yourName:'Your name',role:'I am',electrician:'Electrician',leadRole:'Lead electrician',join:'Join project',demo:'Look around with a demo project',
   demoHint:'The demo uses made-up colleagues. Nothing is saved.',needName:'Enter your name.',needPid:'Enter a project ID, for example VASA-12.',
   pidPh:'e.g. VASA-12',namePh:'e.g. Sebastian',whatNeed:'What do you need for tomorrow?',add:'Add item',cutoff:'Cut-off',left:'left',closed:'Closed for today. New items are marked late.',
@@ -323,7 +323,7 @@ var T={
   supAdd:'Add your own supplier',supEditTitle:'Change supplier',supName:'Supplier name',supNamePh:'e.g. Elgrossisten',supUrl:'Search link',supUrlPh:'https://www.example.se/search?q={q}',supUrlHint:'Use {q} where the article number or search word goes. You confirm each match by hand.',
   supSave:'Save supplier',supCancel:'Cancel',needSupName:'Enter a supplier name (2 to 40 characters).',errSupUrl:'The link must start with https:// and contain {q}.',supDup:'You already have a supplier with that name.',supSaved:'Supplier saved',supDeleted:'Supplier deleted',
   pickDefault:'Choose a default supplier for this project before ordering.',pickDefaultBtn:'Choose supplier',findAt:'Find at',useDefault:'Default',supplierFor:'Supplier for',allSup:'All suppliers',noSup:'No supplier'},
- sv:{codePh2:'Din kod',codeLabel:'Kod',codeHint2:'Elektriker: gå med-koden från din ledare. Ledare: företagets ledarkod.',errCode:'Fel kod. Be din ledare om den aktuella.',errTooMany:'För många felaktiga koder. Försök igen om 15 minuter.',imAdmin:'Jag är företagets admin, eller mitt företag är inte tillagt',imAdminTitle:'Företagsadmin',adminScreenHint:'Välj ditt företag. Nytt företag: lägg till det nedan. Fortsätt sedan till dina projekt.',continueBtn:'Fortsätt',notAdminYet:'Skriv adminkoden nedan först.',leadBack:'Tillbaka till projekt hos',pickProject:'Välj ett projekt, eller skapa ett nytt.',newProject:'Nytt projekt',createProject:'Skapa projekt',noProjects:'Inga projekt än. Skapa det första.',errProjExists:'Projekt-ID:t finns redan i ditt företag. Välj det i listan.',leadExpired:'Din ledarinloggning har gått ut. Skriv ledarkoden igen.',newHere:'Ny här',codeFromLead:'Koden du fått av din ledare.',haveJoined:'Varit med förut? Använd projekt-ID och namn istället',backNew:'Ny här? Använd gå med-koden',imLead:'Jag är arbetsledare, eller mitt företag är inte tillagt',backSimple:'Tillbaka',errNoMember:'Ingen elektriker med det namnet i projektet. Ny här? Använd gå med-koden från din ledare.',chooseCo:'Vilket företag?',needJoinCode:'Skriv gå med-koden från din ledare.',tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
+ sv:{emailPh:'du@exempel.se',codePh6:'Sexsiffrig kod',sendCode:'Skicka kod',confirmCode:'Bekräfta',codeSent:'Vi har skickat en kod till din e-post. Det kan ta en minut.',errEmail:'Skriv en giltig e-postadress.',errEmailSend:'Kunde inte skicka koden. Försök igen om en minut.',errEmailRate:'För många e-postmeddelanden. Vänta några minuter och försök igen.',errNoAccount:'Ingen admininloggning är sparad för den e-postadressen.',errCodeWrong:'Fel eller utgången kod.',emailSaved:'E-posten är sparad. Du kan nu logga in på vilken telefon som helst.',signedInEmail:'Inloggad.',emailLinked:'Inloggning med e-post är på:',emailReminder:'Spara din admininloggning med din e-post, så att du kan logga in igen på en ny telefon.',signinEmail:'Logga in med min e-post (ny telefon)',codePh2:'Din kod',codeLabel:'Kod',codeHint2:'Elektriker: gå med-koden från din ledare. Ledare: företagets ledarkod.',errCode:'Fel kod. Be din ledare om den aktuella.',errTooMany:'För många felaktiga koder. Försök igen om 15 minuter.',imAdmin:'Jag är företagets admin, eller mitt företag är inte tillagt',imAdminTitle:'Företagsadmin',adminScreenHint:'Välj ditt företag. Nytt företag: lägg till det nedan. Fortsätt sedan till dina projekt.',continueBtn:'Fortsätt',notAdminYet:'Skriv adminkoden nedan först.',leadBack:'Tillbaka till projekt hos',pickProject:'Välj ett projekt, eller skapa ett nytt.',newProject:'Nytt projekt',createProject:'Skapa projekt',noProjects:'Inga projekt än. Skapa det första.',errProjExists:'Projekt-ID:t finns redan i ditt företag. Välj det i listan.',leadExpired:'Din ledarinloggning har gått ut. Skriv ledarkoden igen.',newHere:'Ny här',codeFromLead:'Koden du fått av din ledare.',haveJoined:'Varit med förut? Använd projekt-ID och namn istället',backNew:'Ny här? Använd gå med-koden',imLead:'Jag är arbetsledare, eller mitt företag är inte tillagt',backSimple:'Tillbaka',errNoMember:'Ingen elektriker med det namnet i projektet. Ny här? Använd gå med-koden från din ledare.',chooseCo:'Vilket företag?',needJoinCode:'Skriv gå med-koden från din ledare.',tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
   pidPh:'t.ex. VASA-12',namePh:'t.ex. Sebastian',whatNeed:'Vad behöver du till i morgon?',add:'Lägg till',cutoff:'Sista beställning',left:'kvar',closed:'Stängt för i dag. Nya rader markeras som sena.',
@@ -374,7 +374,7 @@ async function ensureAuth(){
   var g=await sb.auth.getSession();
   var ses=g.data&&g.data.session;
   if(!ses){var r=await sb.auth.signInAnonymously();if(r.error)throw r.error;ses=r.data.session;}
-  S.uid=ses.user.id;return ses;
+  S.uid=ses.user.id;S.email=(ses.user.email&&!ses.user.is_anonymous)?ses.user.email:null;return ses;
 }
 /* a quantity the user tapped but the server has not confirmed yet wins over what the server sends back */
 function keepPending(rows){
@@ -878,6 +878,54 @@ async function showProjects(m){
   }catch(e){list.replaceChildren();err.textContent=fail(e);}
 }
 
+/* email sign-in for company admins: link an email to this phone's sign-in (same user, roles stay),
+   or sign in on a new phone with a 6-digit code sent to that email. Needs the Supabase email templates to show {{ .Token }}. */
+function emailFlow(kind,onDone){
+  var emIn=h('input',{type:'email',autocomplete:'email',inputmode:'email',autocapitalize:'none',spellcheck:'false',placeholder:t('emailPh'),maxlength:'120'});
+  var cdIn=h('input',{type:'text',autocomplete:'one-time-code',inputmode:'numeric',placeholder:t('codePh6'),maxlength:'8'});
+  var msg=h('div',{class:'err',role:'alert'});
+  var sent=h('p',{class:'hint',hidden:true},t('codeSent'));
+  var send=h('button',{type:'button',class:'alt'},t('sendCode'));
+  var ok=h('button',{type:'button',class:'alt'},t('confirmCode'));
+  var step2=h('div',{hidden:true},cdIn,ok);
+  var email='';
+  function errTxt(e){
+    var m=String((e&&(e.message||e.code))||'').toLowerCase();
+    if(m.indexOf('rate')>=0||m.indexOf('seconds')>=0)return t('errEmailRate');
+    if(m.indexOf('signup')>=0&&m.indexOf('not allowed')>=0)return t('errNoAccount');
+    if(m.indexOf('invalid')>=0&&m.indexOf('email')>=0)return t('errEmail');
+    return t('errEmailSend');
+  }
+  send.onclick=async function(){
+    msg.textContent='';email=emEmail();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){msg.textContent=t('errEmail');emIn.focus();return;}
+    if(!sb){msg.textContent=t('errServer');return;}
+    send.disabled=true;
+    try{
+      await ensureAuth();
+      var r=kind==='link'?await sb.auth.updateUser({email:email}):await sb.auth.signInWithOtp({email:email,options:{shouldCreateUser:false}});
+      if(r.error)throw r.error;
+      sent.hidden=false;step2.hidden=false;cdIn.focus();
+    }catch(e){msg.textContent=errTxt(e);}
+    send.disabled=false;
+  };
+  function emEmail(){return emIn.value.trim().toLowerCase();}
+  ok.onclick=async function(){
+    msg.textContent='';var c=cdIn.value.replace(/\D/g,'');
+    if(c.length<6){msg.textContent=t('errCodeWrong');cdIn.focus();return;}
+    ok.disabled=true;
+    try{
+      var r=await sb.auth.verifyOtp({email:email||emEmail(),token:c,type:kind==='link'?'email_change':'email'});
+      if(r.error)throw r.error;
+      await ensureAuth();
+      toast(t(kind==='link'?'emailSaved':'signedInEmail'));
+      if(onDone)onDone();
+    }catch(e){msg.textContent=t('errCodeWrong');}
+    ok.disabled=false;
+  };
+  return h('div',{class:'addbox'},emIn,send,sent,step2,msg);
+}
+
 function showFullJoin(){
   S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=true;S.projCtx=null;
   /* company picker: search stored companies by name or org. number, or add one with its org. number */
@@ -980,6 +1028,8 @@ function showFullJoin(){
   var claimErr=h('div',{class:'err',role:'alert'});
   var claimGo=h('button',{type:'button',class:'alt',onclick:function(){claimAdmin();}},t('claimGo'));
   var claimBox=h('div',{class:'addbox',hidden:true},h('label',{for:'claimcode'},t('adminCode'),claimIn),claimErr,claimGo);
+  var signinBox=h('div',{hidden:true});
+  var signinLink=h('button',{type:'button',class:'linkbtn',onclick:function(){signinBox.hidden=!signinBox.hidden;if(!signinBox.hidden&&!signinBox.firstChild)signinBox.append(emailFlow('signin',function(){signinBox.hidden=true;signinBox.replaceChildren();refreshRole();}));}},t('signinEmail'));
   var claimLink=h('button',{type:'button',class:'linkbtn',hidden:true,onclick:function(){claimBox.hidden=!claimBox.hidden;claimErr.textContent='';if(!claimBox.hidden)claimIn.focus();}},t('iAmAdmin'));
   async function refreshRole(){
     var n=++roleN;role2=null;
@@ -1000,6 +1050,8 @@ function showFullJoin(){
     if(!(sel&&role2&&role2.admin))return;
     adminBox.hidden=false;
     adminBox.append(h('div',{style:'font-weight:700'},t('coAdminTitle')));
+    if(S.email)adminBox.append(h('p',{class:'hint'},t('emailLinked')+' '+S.email));
+    else adminBox.append(h('p',{class:'hint'},t('emailReminder')),emailFlow('link',function(){renderRole();}));
     if(role2.status!=='approved'){adminBox.append(h('p',{class:'hint'},t('coPending')));return;}
     invCode.textContent='';
     adminBox.append(h('p',{class:'hint'},t('leadInviteHint')),invCode,
@@ -1053,7 +1105,7 @@ function showFullJoin(){
   var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go();}},
     h('button',{type:'button',class:'linkbtn',onclick:showJoin},t('backSimple')),
     h('p',{class:'hint'},t('adminScreenHint')),
-    h('div',{class:'cogroup'},h('div',{class:'cobox'},h('label',{for:'company'},t('company'),coIn),coSug),coInfo,openAddBtn,addBox,adminBox,claimLink,claimBox),
+    h('div',{class:'cogroup'},h('div',{class:'cobox'},h('label',{for:'company'},t('company'),coIn),coSug),coInfo,openAddBtn,addBox,adminBox,claimLink,claimBox,signinLink,signinBox),
     h('label',{for:'uname'},t('yourName'),name),
     err,btn);
   app.replaceChildren(h('div',{class:'join'},h('div',{class:'wrap'},

@@ -35,6 +35,12 @@ The browser talks to Supabase directly. Access rules live in the database
 - **Lead:** signs in with name and the company's **lead code** (the company admin hands it out; the app owner can read it in `/admin.html`, Companies tab, for companies without an admin). A lead sees every project of the company, opens one or creates a new one, and is lead in the projects they open. Reads and changes the join code under the Team tab. Can change or delete any item, add article numbers, mark items ordered, set the cut-off time and export CSV. Chooses the project's default supplier (required before ordering), tags items with a supplier, and adds, changes or deletes the company's own suppliers. Only leads can set an item's supplier; this is enforced in the database.
 - **Wrong codes:** each phone gets 10 wrong codes per 15 minutes, and all phones together 300. After that sign-in with a code is blocked until the window passes.
 
+### Email sign-in for company admins (optional)
+
+An admin can save their sign-in with an email, so a new or cleared phone does not lock them out. On the admin screen the admin box shows a reminder until an email is saved: enter the email, then the 6-digit code that arrives. This links the email to the same user, so admin rights and projects stay. On a new phone: admin screen, "Sign in with my email (new phone)", email, then the code. The admin code still works as a fallback. Leads keep using the lead code; there is no email sign-in for them or for `/admin.html`.
+
+One-time setup in the Supabase dashboard (Authentication, Emails, Templates). Add the code to the **Magic link** and **Change email address** templates, for example `<p>Your code: {{ .Token }}</p>`. The built-in email service sends only a few emails per hour and is best-effort: fine for a pilot, but set up custom SMTP (Authentication, Emails, SMTP settings) before many admins use it.
+
 ### Joining and approval
 
 1. Someone adds a company with a valid org number and chooses an admin code. The company is **pending**: nobody can join projects in it yet.
