@@ -190,6 +190,8 @@ var T={
   impFile:'Choose CSV file',impPaste:'Or paste CSV here',impPreview:'Preview import',impConfirm:'Import now',impRead:'Rows read',impDupes:'Repeated in file (last wins)',impNew:'New',impUpdated:'Updated',impSkipped:'Skipped (bad row)',
   impDone:'Import finished',impNoRows:'No rows found in the CSV.',impNoCols:'Could not find the article number and name columns. Add a header row.',impWorking:'Working…',impNone:'Choose a file or paste CSV first.',
   export:'Export CSV',template:'Download template',exporting:'Exporting…',exported:'File saved',
+  stPending:'Pending',stApproved:'Approved',stRejected:'Rejected',approve:'Approve',reject:'Reject',noAdmin:'No admin',pendingBanner:'Companies waiting for approval:',statusSet:'Company status updated',
+  adminCodeNew:'New admin code',resetTitle:'New admin code',resetHint:'Creates a new code the company admin can use on a new phone. The code is shown once. Give it only to the right person.',resetRevoke:'Also remove the current admins',resetMake:'Create code',resetShown:'New admin code (shown once)',resetCopy:'Copy code',resetCopied:'Copied',
   coSearch:'Search company or org number',coOrg:'Org no.',coProjects:'Projects',coPeople:'People',coItems:'Items',coLast:'Last item',noCos:'No companies found',
   details:'Details',closeDetails:'Close',rename:'Rename',renameSave:'Save name',renamed:'Company renamed',errCoName:'Name must be 2 to 60 characters.',
   merge:'Merge…',mergeTitle:'Merge company',mergeFrom:'This company disappears',mergeInto:'Everything moves into',mergePick:'Choose company',mergeCheck:'Check',
@@ -218,6 +220,8 @@ var T={
   impFile:'Välj CSV-fil',impPaste:'Eller klistra in CSV här',impPreview:'Förhandsgranska import',impConfirm:'Importera nu',impRead:'Rader lästa',impDupes:'Upprepade i filen (sista gäller)',impNew:'Nya',impUpdated:'Uppdaterade',impSkipped:'Hoppade över (dålig rad)',
   impDone:'Importen är klar',impNoRows:'Hittade inga rader i CSV:n.',impNoCols:'Hittade inte kolumnerna för artikelnummer och namn. Lägg till en rubrikrad.',impWorking:'Jobbar…',impNone:'Välj en fil eller klistra in CSV först.',
   export:'Exportera CSV',template:'Ladda ner mall',exporting:'Exporterar…',exported:'Filen sparades',
+  stPending:'Väntar',stApproved:'Godkänt',stRejected:'Nekat',approve:'Godkänn',reject:'Neka',noAdmin:'Ingen admin',pendingBanner:'Företag som väntar på godkännande:',statusSet:'Företagets status ändrad',
+  adminCodeNew:'Ny adminkod',resetTitle:'Ny adminkod',resetHint:'Skapar en ny kod som företagets admin kan använda på en ny telefon. Koden visas en gång. Ge den bara till rätt person.',resetRevoke:'Ta även bort nuvarande admins',resetMake:'Skapa kod',resetShown:'Ny adminkod (visas en gång)',resetCopy:'Kopiera kod',resetCopied:'Kopierat',
   coSearch:'Sök företag eller org.nr',coOrg:'Org.nr',coProjects:'Projekt',coPeople:'Personer',coItems:'Rader',coLast:'Senaste rad',noCos:'Inga företag hittades',
   details:'Detaljer',closeDetails:'Stäng',rename:'Byt namn',renameSave:'Spara namn',renamed:'Företaget bytte namn',errCoName:'Namnet ska vara 2 till 60 tecken.',
   merge:'Slå ihop…',mergeTitle:'Slå ihop företag',mergeFrom:'Det här företaget försvinner',mergeInto:'Allt flyttas till',mergePick:'Välj företag',mergeCheck:'Kontrollera',
@@ -237,7 +241,7 @@ function t(k){return (T[lang]&&T[lang][k])||T.en[k]||k;}
 var S={status:'boot',user:null,tab:'suppliers',email:ls('ol.adminEmail')||'',err:'',busy:false,confirm:null,stats:null,
   sup:{list:null,names:{},form:null,sample:'kabel 3x1,5'},
   cat:{rows:[],total:0,q:'',limit:50,loading:false,edit:null,csv:'',fname:'',imp:null,busy:false,req:0},
-  co:{rows:null,q:'',detail:null,rename:null,merge:null},
+  co:{rows:null,q:'',detail:null,rename:null,merge:null,reset:null,newCode:null},
   act:{audit:null}};
 var app=document.getElementById('app');
 var CFG=window.APP_CONFIG||{};var sb=null;
@@ -506,6 +510,16 @@ async function runImport(){
 async function loadCompanies(){
   try{S.co.rows=await rpc('admin_company_overview');render();}catch(e){fail(e);}
 }
+async function setCoStatus(org,status){
+  try{await rpc('admin_set_company_status',{p_org:org,p_status:status});toast(t('statusSet'));loadCompanies();}catch(e){fail(e);}
+}
+async function makeAdminCode(){
+  var r=S.co.reset;if(!r)return;
+  try{
+    var code=await rpc('admin_reset_company_admin_code',{p_org:r.org,p_revoke_admins:!!r.revoke});
+    S.co.newCode={org:r.org,name:r.name,code:code};S.co.reset=null;render();loadCompanies();
+  }catch(e){fail(e);}
+}
 async function openDetail(org){
   try{var d=await rpc('admin_company_detail',{p_org:org});S.co.detail={org:org,data:d};render();}catch(e){fail(e);}
 }
@@ -717,6 +731,10 @@ function viewCompanies(){
   w.append(h('div',{class:'toolbar'},h('div',{class:'grow'},q),
     h('button',{type:'button',class:'btn',onclick:loadCompanies},t('refresh'))));
   var needle=norm(co.q).replace(/-/g,''),rows=co.rows.filter(function(r){return !needle||norm(r.name).indexOf(needle)>=0||String(r.org_nr).indexOf(needle)>=0;});
+  var nPend=co.rows.filter(function(r){return r.status==='pending';}).length;
+  if(nPend)w.append(h('div',{class:'banner',style:'margin-bottom:14px'},t('pendingBanner')+' '+nPend));
+  if(co.newCode)w.append(codePanel());
+  if(co.reset)w.append(resetPanel());
   if(co.merge)w.append(mergePanel());
   var list=h('div',{class:'list'});
   if(!rows.length)list.append(emptyBox(t('noCos')));
@@ -732,11 +750,16 @@ function viewCompanies(){
     }else{
       card.append(h('div',{class:'main1'},h('div',{class:'title'},r.name),
         h('div',{class:'meta'},h('span',{class:'mono'},fmtOrg(r.org_nr)),
+          h('span',{class:'pill '+(r.status==='approved'?'ok':'warn')},t(r.status==='approved'?'stApproved':(r.status==='rejected'?'stRejected':'stPending'))),
+          r.has_admin?null:h('span',{class:'pill'},t('noAdmin')),
           h('span',null,cnt(r.projects,'projects')),h('span',null,cnt(r.members,'members')),h('span',null,cnt(r.items,'items')),
           h('span',null,t('coLast')+': '+fmtTime(r.last_item_at)))),
         h('div',{class:'acts'},
+          r.status!=='approved'?h('button',{type:'button',class:'btn sm pri',onclick:function(){setCoStatus(r.org_nr,'approved');}},t('approve')):null,
+          r.status==='pending'?h('button',{type:'button',class:'btn sm',onclick:function(){setCoStatus(r.org_nr,'rejected');}},t('reject')):null,
           h('button',{type:'button',class:'btn sm',onclick:function(){if(co.detail&&co.detail.org===r.org_nr){co.detail=null;render();}else openDetail(r.org_nr);}},co.detail&&co.detail.org===r.org_nr?t('closeDetails'):t('details')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.rename={org:r.org_nr,val:r.name,err:''};render();}},t('rename')),
+          h('button',{type:'button',class:'btn sm',onclick:function(){co.reset={org:r.org_nr,name:r.name,revoke:false};co.newCode=null;render();window.scrollTo({top:0,behavior:'smooth'});}},t('adminCodeNew')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.merge={from:r.org_nr,into:'',res:null,type:''};render();window.scrollTo({top:0,behavior:'smooth'});}},t('merge'))));
     }
     list.append(card);
@@ -744,6 +767,26 @@ function viewCompanies(){
   });
   w.append(list);
   return w;
+}
+function resetPanel(){
+  var r=S.co.reset;
+  var cb=h('input',{type:'checkbox',id:'rs-revoke',onchange:function(){r.revoke=cb.checked;}});
+  cb.checked=!!r.revoke;
+  return h('div',{class:'panel',style:'margin-bottom:14px;border:2px solid var(--accent)'},h('h2',{class:'sec'},t('resetTitle')),
+    h('p',{class:'hint'},r.name+' · '+fmtOrg(r.org)),h('p',{class:'hint'},t('resetHint')),
+    h('label',{style:'display:flex;gap:8px;align-items:center;margin:8px 0'},cb,t('resetRevoke')),
+    h('div',{class:'formacts',style:'margin-top:12px'},
+      h('button',{type:'button',class:'btn pri',onclick:makeAdminCode},t('resetMake')),
+      h('button',{type:'button',class:'btn',onclick:function(){S.co.reset=null;render();}},t('cancel'))));
+}
+function codePanel(){
+  var c=S.co.newCode;
+  return h('div',{class:'panel',style:'margin-bottom:14px;border:2px solid var(--accent)'},h('h2',{class:'sec'},t('resetShown')),
+    h('p',{class:'hint'},c.name+' · '+fmtOrg(c.org)),
+    h('div',{style:'font-size:30px;font-weight:800;letter-spacing:.14em;margin:8px 0',class:'mono'},c.code),
+    h('div',{class:'formacts'},
+      h('button',{type:'button',class:'btn pri',onclick:function(){try{navigator.clipboard.writeText(c.code);toast(t('resetCopied'));}catch(e){toast(c.code);}}},t('resetCopy')),
+      h('button',{type:'button',class:'btn',onclick:function(){S.co.newCode=null;render();}},t('closeDetails'))));
 }
 function detailPanel(data){
   var p=h('div',{class:'panel'});
