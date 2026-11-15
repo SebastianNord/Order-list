@@ -198,7 +198,9 @@ var T={
   mergeOk:'Ready to merge. Moves:',conflicts:'Cannot merge yet.',confP:'Same project ID in both companies:',confS:'Same supplier name in both companies:',mergeFix:'Rename or remove these first, then check again.',
   mergeType:'Type the org number of the company that disappears to confirm',mergeNow:'Merge now',merged:'Companies merged',
   members:'People',lead:'Lead',electrician:'Electrician',noProjects:'No projects',cutoff:'cut-off',
-  stCompanies:'Companies',stProjects:'Projects',stPeople:'People',stItems:'Items',perDay:'Items per day, last 30 days',audit:'Audit log',auditEmpty:'Nothing logged yet.',refresh:'Refresh',
+  stCompanies:'Companies',stProjects:'Projects',stPeople:'People',stItems:'Items',perDay:'Items per day, last 30 days',audit:'Audit log',auditEmpty:'Nothing logged yet.',refresh:'Refresh',tUsers:'Users',usSearch:'Search username or email',usAllCos:'All companies',usNoCo:'No company',usNone:'No users found',usLast:'Last sign-in',usProjects:'Projects',usOwner:'Owner',usDisabled:'Disabled',
+  roleAdmin:'Company admin',roleLead:'Company lead',roleMember:'Member',usEditProjects:'Projects…',usRemove:'Remove',usRemoveCo:'Remove from company',usRemoveCoSure:'Tap again to remove',usReset:'Send password reset',pwSent:'Reset email sent.',pwSendErr:'Could not send the email.',
+  usDisable:'Disable',usEnable:'Enable',usDelete:'Delete user',usDeleteSure:'Tap again to delete',usOpen:'Users',usDelHint:'Deleting removes the account. Their items stay in the project as history.',
   unit:{projects:'projects',members:'people',items:'items',suppliers:'suppliers'},
   unit1:{projects:'project',members:'person',items:'item',suppliers:'supplier'}
  },
@@ -228,7 +230,9 @@ var T={
   mergeOk:'Redo att slå ihop. Flyttas:',conflicts:'Kan inte slå ihop än.',confP:'Samma projekt-ID i båda företagen:',confS:'Samma leverantörsnamn i båda företagen:',mergeFix:'Byt namn på eller ta bort dessa först och kontrollera igen.',
   mergeType:'Skriv org.nr för företaget som försvinner för att bekräfta',mergeNow:'Slå ihop nu',merged:'Företagen slogs ihop',
   members:'Personer',lead:'Arbetsledare',electrician:'Elektriker',noProjects:'Inga projekt',cutoff:'sista beställning',
-  stCompanies:'Företag',stProjects:'Projekt',stPeople:'Personer',stItems:'Rader',perDay:'Rader per dag, senaste 30 dagarna',audit:'Ändringslogg',auditEmpty:'Inget loggat än.',refresh:'Uppdatera',
+  stCompanies:'Företag',stProjects:'Projekt',stPeople:'Personer',stItems:'Rader',perDay:'Rader per dag, senaste 30 dagarna',audit:'Ändringslogg',auditEmpty:'Inget loggat än.',refresh:'Uppdatera',tUsers:'Användare',usSearch:'Sök användarnamn eller e-post',usAllCos:'Alla företag',usNoCo:'Inget företag',usNone:'Inga användare hittades',usLast:'Senast inloggad',usProjects:'Projekt',usOwner:'Ägare',usDisabled:'Avstängd',
+  roleAdmin:'Företagsadmin',roleLead:'Företagsledare',roleMember:'Medlem',usEditProjects:'Projekt…',usRemove:'Ta bort',usRemoveCo:'Ta bort från företaget',usRemoveCoSure:'Tryck igen för att ta bort',usReset:'Skicka lösenordsåterställning',pwSent:'Mejl för återställning skickat.',pwSendErr:'Kunde inte skicka mejlet.',
+  usDisable:'Stäng av',usEnable:'Slå på',usDelete:'Radera användare',usDeleteSure:'Tryck igen för att radera',usOpen:'Användare',usDelHint:'Radering tar bort kontot. Användarens rader finns kvar i projektet som historik.',
   unit:{projects:'projekt',members:'personer',items:'rader',suppliers:'leverantörer'},
   unit1:{projects:'projekt',members:'person',items:'rad',suppliers:'leverantör'}
  }
@@ -242,7 +246,8 @@ var S={status:'boot',user:null,tab:'suppliers',email:ls('ol.adminEmail')||'',err
   sup:{list:null,names:{},form:null,sample:'kabel 3x1,5'},
   cat:{rows:[],total:0,q:'',limit:50,loading:false,edit:null,csv:'',fname:'',imp:null,busy:false,req:0},
   co:{rows:null,q:'',detail:null,rename:null,merge:null,reset:null,newCode:null},
-  act:{audit:null}};
+  act:{audit:null},
+  us:{rows:null,q:'',org:'',proj:null,sure:null,cos:{},coList:[]}};
 var app=document.getElementById('app');
 var CFG=window.APP_CONFIG||{};var sb=null;
 /* own storage key: the admin session never mixes with the anonymous sessions of the app on the same address */
@@ -377,7 +382,7 @@ async function sendLink(){
 async function doSignOut(expired){
   try{await sb.auth.signOut();}catch(e){}
   S.user=null;S.stats=null;S.status='login';S.err=expired?t('linkErr'):'';
-  S.sup.list=null;S.cat.rows=[];S.co.rows=null;S.act.audit=null;
+  S.sup.list=null;S.cat.rows=[];S.co.rows=null;S.act.audit=null;S.us.rows=null;S.us.proj=null;
   render();
 }
 
@@ -386,6 +391,7 @@ function loadTab(){
   if(S.tab==='suppliers')loadSuppliers();
   else if(S.tab==='catalog')loadCatalog();
   else if(S.tab==='companies')loadCompanies();
+  else if(S.tab==='users')loadUsers();
   else if(S.tab==='activity')loadActivity();
 }
 async function loadSuppliers(){
@@ -557,6 +563,100 @@ async function loadActivity(){
   }catch(e){fail(e);}
 }
 
+
+/* ---------- users ---------- */
+async function loadUsers(){
+  try{
+    var a=await rpc('admin_user_list');
+    var c=await rpc('admin_company_overview');
+    var names={};c.forEach(function(x){names[x.org_nr]=x.name;});
+    S.us.cos=names;S.us.coList=c;S.us.rows=a;render();
+  }catch(e){fail(e);}
+}
+async function userAct(fn,args,msg){
+  try{await rpc(fn,args);if(msg)toast(t(msg));S.us.sure=null;await loadUsers();}catch(e){fail(e);}
+}
+async function resetPw(u){
+  try{var r=await sb.auth.resetPasswordForEmail(u.email);if(r.error)throw r.error;toast(t('pwSent'));}catch(e){toast(t('pwSendErr'));}
+}
+async function openUserProjects(u){
+  if(S.us.proj&&S.us.proj.uid===u.user_id){S.us.proj=null;render();return;}
+  S.us.proj={uid:u.user_id,list:null};render();
+  try{
+    var d=await rpc('admin_company_detail',{p_org:u.company_id});
+    if(S.us.proj&&S.us.proj.uid===u.user_id){S.us.proj.list=d.map(function(x){return x.project;});render();}
+  }catch(e){fail(e);}
+}
+function roleOf(u){return u.is_company_admin?'roleAdmin':(u.is_company_lead?'roleLead':'roleMember');}
+function viewUsers(){
+  var w=h('div'),us=S.us;
+  if(!us.rows){w.append(loadingBox());return w;}
+  var q=h('input',{type:'text',class:'in',id:'us-q',style:'width:100%',value:us.q,placeholder:t('usSearch'),'aria-label':t('usSearch'),autocomplete:'off',oninput:function(){us.q=q.value;render();}});
+  var sel=h('select',{class:'sel',id:'us-org','aria-label':t('tCompanies'),onchange:function(){us.org=sel.value;us.proj=null;render();}});
+  sel.append(h('option',{value:''},t('usAllCos')),h('option',{value:'-'},t('usNoCo')));
+  (us.coList||[]).forEach(function(c){sel.append(h('option',{value:c.org_nr},c.name+' · '+fmtOrg(c.org_nr)));});
+  sel.value=us.org;
+  w.append(h('div',{class:'toolbar'},h('div',{class:'grow'},q),sel,h('button',{type:'button',class:'btn',onclick:loadUsers},t('refresh'))));
+  w.append(h('p',{class:'hint'},t('usDelHint')));
+  var needle=norm(us.q);
+  var rows=us.rows.filter(function(u){
+    if(us.org==='-'&&u.company_id)return false;
+    if(us.org&&us.org!=='-'&&u.company_id!==us.org)return false;
+    return !needle||norm(u.username).indexOf(needle)>=0||norm(u.email||'').indexOf(needle)>=0;
+  });
+  function sureBtn(key,label,sureLabel,fn){
+    var on=us.sure===key;
+    return h('button',{type:'button',class:'btn sm'+(on?' pri':''),onclick:function(){if(on){us.sure=null;fn();}else{us.sure=key;render();}}},on?sureLabel:label);
+  }
+  function smBtn(label,fn){return h('button',{type:'button',class:'btn sm',onclick:fn},label);}
+  var list=h('div',{class:'list'});
+  if(!rows.length)list.append(emptyBox(t('usNone')));
+  rows.forEach(function(u){
+    var id=u.user_id,own=u.is_owner;
+    var projTxt=(u.projects||[]).map(function(p){return p.project+' ('+(p.role==='lead'?t('lead'):t('electrician'))+')';}).join(', ');
+    var main=h('div',{class:'main1'},h('div',{class:'title'},u.username),
+      h('div',{class:'meta'},h('span',null,u.email||''),
+        h('span',null,u.company_id?(us.cos[u.company_id]||fmtOrg(u.company_id)):t('usNoCo')),
+        u.company_id?h('span',{class:'pill'},t(roleOf(u))):null,
+        u.disabled?h('span',{class:'pill warn'},t('usDisabled')):null,
+        own?h('span',{class:'pill ok'},t('usOwner')):null,
+        h('span',null,t('usLast')+': '+fmtTime(u.last_sign_in_at))),
+      projTxt?h('div',{class:'meta'},h('span',null,t('usProjects')+': '+projTxt)):null);
+    var acts=null;
+    if(!own){
+      var rs=null;
+      if(u.company_id){
+        rs=h('select',{class:'sel','aria-label':t('roleMember'),onchange:function(){userAct('admin_user_company_role',{p_user:id,p_role:rs.value},'saved');}},
+          h('option',{value:'admin'},t('roleAdmin')),h('option',{value:'lead'},t('roleLead')),h('option',{value:'member'},t('roleMember')));
+        rs.value=u.is_company_admin?'admin':(u.is_company_lead?'lead':'member');
+      }
+      acts=h('div',{class:'acts'},rs,
+        u.company_id?smBtn(t('usEditProjects'),function(){openUserProjects(u);}):null,
+        smBtn(t('usReset'),function(){resetPw(u);}),
+        smBtn(u.disabled?t('usEnable'):t('usDisable'),function(){userAct('admin_user_disable',{p_user:id,p_disabled:!u.disabled},'saved');}),
+        u.company_id?sureBtn('rm:'+id,t('usRemoveCo'),t('usRemoveCoSure'),function(){userAct('admin_user_remove',{p_user:id},'saved');}):null,
+        sureBtn('del:'+id,t('usDelete'),t('usDeleteSure'),function(){userAct('admin_user_delete',{p_user:id},'saved');}));
+    }
+    list.append(h('div',{class:'card'},main,acts));
+    if(us.proj&&us.proj.uid===id){
+      var p=h('div',{class:'panel'});
+      if(!us.proj.list)p.append(loadingBox());
+      else if(!us.proj.list.length)p.append(h('p',{class:'hint',style:'margin:0'},t('noProjects')));
+      (us.proj.list||[]).forEach(function(pid){
+        var cur=(u.projects||[]).filter(function(x){return x.project===pid;})[0];
+        p.append(h('div',{class:'rowline'},h('span',{class:'art'},pid),h('span',{class:'nm'},cur?(cur.role==='lead'?t('lead'):t('electrician')):'–'),
+          h('span',{class:'acts'},
+            smBtn(t('electrician'),function(){userAct('admin_user_project',{p_user:id,p_project:pid,p_role:'electrician'},'saved');}),
+            smBtn(t('lead'),function(){userAct('admin_user_project',{p_user:id,p_project:pid,p_role:'lead'},'saved');}),
+            cur?smBtn(t('usRemove'),function(){userAct('admin_user_project',{p_user:id,p_project:pid,p_role:'remove'},'saved');}):null)));
+      });
+      list.append(p);
+    }
+  });
+  w.append(list);
+  return w;
+}
+
 /* ---------- views ---------- */
 function langSeg(){
   return h('div',{class:'seg',role:'group','aria-label':'Language'},
@@ -599,8 +699,8 @@ function viewShell(){
     h('button',{type:'button',class:'iconbtn','aria-label':t('signOut'),title:t('signOut'),onclick:function(){doSignOut(false);}},icon('out')));
   var top=h('div',{class:'top'},h('div',{class:'wrap'},brandRow(me)));
   function tab(id,label){return h('button',{type:'button',class:'tab','aria-pressed':String(S.tab===id),onclick:function(){S.tab=id;S.confirm=null;render();loadTab();}},label);}
-  var tabs=h('div',{class:'tabs',role:'group','aria-label':'Sections'},tab('suppliers',t('tSuppliers')),tab('catalog',t('tCatalog')),tab('companies',t('tCompanies')),tab('activity',t('tActivity')));
-  var body=S.tab==='suppliers'?viewSuppliers():S.tab==='catalog'?viewCatalog():S.tab==='companies'?viewCompanies():viewActivity();
+  var tabs=h('div',{class:'tabs',role:'group','aria-label':'Sections'},tab('suppliers',t('tSuppliers')),tab('catalog',t('tCatalog')),tab('companies',t('tCompanies')),tab('users',t('tUsers')),tab('activity',t('tActivity')));
+  var body=S.tab==='suppliers'?viewSuppliers():S.tab==='catalog'?viewCatalog():S.tab==='companies'?viewCompanies():S.tab==='users'?viewUsers():viewActivity();
   return h('div',null,top,h('main',null,h('div',{class:'wrap'},tabs,body)));
 }
 function cnt(n,k){return n+' '+(Number(n)===1?t('unit1')[k]:t('unit')[k]);}
@@ -764,6 +864,7 @@ function viewCompanies(){
           r.status!=='approved'?h('button',{type:'button',class:'btn sm pri',onclick:function(){setCoStatus(r.org_nr,'approved');}},t('approve')):null,
           r.status==='pending'?h('button',{type:'button',class:'btn sm',onclick:function(){setCoStatus(r.org_nr,'rejected');}},t('reject')):null,
           h('button',{type:'button',class:'btn sm',onclick:function(){if(co.detail&&co.detail.org===r.org_nr){co.detail=null;render();}else openDetail(r.org_nr);}},co.detail&&co.detail.org===r.org_nr?t('closeDetails'):t('details')),
+          h('button',{type:'button',class:'btn sm',onclick:function(){S.us.org=r.org_nr;S.us.q='';S.tab='users';render();loadTab();}},t('usOpen')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.rename={org:r.org_nr,val:r.name,err:''};render();}},t('rename')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.reset={org:r.org_nr,name:r.name,revoke:false};co.newCode=null;render();window.scrollTo({top:0,behavior:'smooth'});}},t('adminCodeNew')),
           h('button',{type:'button',class:'btn sm',onclick:function(){showLeadCode(r.org_nr,r.name,false);}},t('leadCodeBtn')),
