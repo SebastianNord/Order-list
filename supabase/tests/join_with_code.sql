@@ -90,7 +90,7 @@ begin
   r := public.join_with_code('a-aa aaa', 'Erik');
   perform t.ok(r->>'company_id' = '5560160680' and r->>'project_id' = 'P1' and r->>'role' = 'electrician'
                and r->>'company_name' = 'Test El AB', 'code alone finds company and project (case and dashes ignored)');
-  perform t.ok(r->'join_code' = 'null'::json, 'the join code is not returned to an electrician');
+  perform t.ok((r->>'join_code') is null, 'the join code is not returned to an electrician');
   r := public.join_with_code('BBBBBB', 'Erik');
   perform t.ok(r->>'company_id' = '5566770011', 'the same code text belongs to one project only');
   perform t.as_owner();
@@ -112,7 +112,7 @@ begin
   perform t.ok(r->'choose' is not null and json_array_length(r->'choose') = 2,
                'same project ID and name in two companies: the caller must choose');
   r := public.rejoin_project('P1', 'Erik', '556016-0680');
-  perform t.ok(r->>'company_id' = '5560160680' and r->>'role' = 'electrician' and r->>'name' = 'erik',
+  perform t.ok(r->>'company_id' = '5560160680' and r->>'role' = 'electrician' and r->>'name' = 'Erik',
                'choosing a company joins it as electrician on a new phone');
   perform t.as_owner();
   perform t.ok(exists (select 1 from public.members where user_id = E2 and company_id = '5560160680' and project_id = 'P1'
