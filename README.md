@@ -5,7 +5,7 @@ person adds what they need for tomorrow, the lead sees one merged list with who
 asked for what, tags each item with a supplier and exports a CSV per supplier.
 
 - Swedish and English, light and dark theme
-- Join with company, project ID, name and the project's join code. The lead also uses a lead code
+- Electricians join with name + the project's join code (the code alone finds company and project). Joined before: project ID + name. Leads and company admins use the full form (company, project ID, lead code) behind "I am a lead"
 - Suppliers: a preset list shared by all companies, plus a company's own
   suppliers. A supplier is a name and a search link (`{q}` is replaced by the
   article number or search word). The lead picks a default supplier per project
@@ -31,7 +31,7 @@ The browser talks to Supabase directly. Access rules live in the database
 - **App owner:** you, in `/admin.html`. Approves new companies, hands out company admin codes, manages preset suppliers and the catalog.
 - **Company admin:** the person who adds a new company (and chooses its admin code), or anyone who enters the admin code on a new phone. Starts projects and gives out the company's lead invite code.
 
-- **Electrician:** joins with project ID, name and the project's join code (not needed again on the same phone). Adds items, changes or
+- **Electrician:** joins with name and the project's join code. Join codes are unique across all companies. On another phone, project ID + name is enough if that name is already an electrician in the project (the company is asked only if the ID exists in several). Anyone who knows a project ID and a member's name can therefore get in; accepted for now. Adds items, changes or
   removes their own items until the lead has ordered them.
 - **Lead:** the first person to join a new project ID as lead chooses its lead
   code. Only a company admin or an invited lead (someone who entered the company's lead invite code) may start a new project. Later leads need the project's lead code. Reads and changes the join code under the Team tab. Can change or delete any item, add article
@@ -67,7 +67,7 @@ Not secret on purpose: the company list and each company's status are readable b
   plus the `join_project` and `add_company` functions. Schema changes live in
   `supabase/migrations/` and are applied in order: `initial_order_list_schema`,
   `add_company_layer`, `add_suppliers`, `suppliers_grants`,
-  `items_supplier_lead_only`, then the files in `supabase/migrations/` from `20261109221000_add_admin_area` on, including `20261115010000_company_admin_and_join_codes`.
+  `items_supplier_lead_only`, then the files in `supabase/migrations/` from `20261109221000_add_admin_area` on, including `20261115010000_company_admin_and_join_codes` and `20261115120000_join_with_code`.
   Apply a new migration **before** deploying the page that needs it.
 - Rollback tests live in `supabase/tests/`. Run one in the SQL editor after its migration; it rolls itself back.
 - Preset suppliers are rows in `suppliers` with `company_id` null. Only the app
