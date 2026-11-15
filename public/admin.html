@@ -191,7 +191,7 @@ var T={
   impDone:'Import finished',impNoRows:'No rows found in the CSV.',impNoCols:'Could not find the article number and name columns. Add a header row.',impWorking:'Working…',impNone:'Choose a file or paste CSV first.',
   export:'Export CSV',template:'Download template',exporting:'Exporting…',exported:'File saved',
   stPending:'Pending',stApproved:'Approved',stRejected:'Rejected',approve:'Approve',reject:'Reject',noAdmin:'No admin',pendingBanner:'Companies waiting for approval:',statusSet:'Company status updated',
-  adminCodeNew:'New admin code',resetTitle:'New admin code',resetHint:'Creates a new code the company admin can use on a new phone. The code is shown once. Give it only to the right person.',resetRevoke:'Also remove the current admins',resetMake:'Create code',resetShown:'New admin code (shown once)',resetCopy:'Copy code',resetCopied:'Copied',
+  adminCodeNew:'New admin code',leadCodeBtn:'Lead code',leadCodeShown:'Lead code (leads sign in with it)',leadCodeRotate:'New lead code',resetTitle:'New admin code',resetHint:'Creates a new code the company admin can use on a new phone. The code is shown once. Give it only to the right person.',resetRevoke:'Also remove the current admins',resetMake:'Create code',resetShown:'New admin code (shown once)',resetCopy:'Copy code',resetCopied:'Copied',
   coSearch:'Search company or org number',coOrg:'Org no.',coProjects:'Projects',coPeople:'People',coItems:'Items',coLast:'Last item',noCos:'No companies found',
   details:'Details',closeDetails:'Close',rename:'Rename',renameSave:'Save name',renamed:'Company renamed',errCoName:'Name must be 2 to 60 characters.',
   merge:'Merge…',mergeTitle:'Merge company',mergeFrom:'This company disappears',mergeInto:'Everything moves into',mergePick:'Choose company',mergeCheck:'Check',
@@ -221,7 +221,7 @@ var T={
   impDone:'Importen är klar',impNoRows:'Hittade inga rader i CSV:n.',impNoCols:'Hittade inte kolumnerna för artikelnummer och namn. Lägg till en rubrikrad.',impWorking:'Jobbar…',impNone:'Välj en fil eller klistra in CSV först.',
   export:'Exportera CSV',template:'Ladda ner mall',exporting:'Exporterar…',exported:'Filen sparades',
   stPending:'Väntar',stApproved:'Godkänt',stRejected:'Nekat',approve:'Godkänn',reject:'Neka',noAdmin:'Ingen admin',pendingBanner:'Företag som väntar på godkännande:',statusSet:'Företagets status ändrad',
-  adminCodeNew:'Ny adminkod',resetTitle:'Ny adminkod',resetHint:'Skapar en ny kod som företagets admin kan använda på en ny telefon. Koden visas en gång. Ge den bara till rätt person.',resetRevoke:'Ta även bort nuvarande admins',resetMake:'Skapa kod',resetShown:'Ny adminkod (visas en gång)',resetCopy:'Kopiera kod',resetCopied:'Kopierat',
+  adminCodeNew:'Ny adminkod',leadCodeBtn:'Ledarkod',leadCodeShown:'Ledarkod (ledare loggar in med den)',leadCodeRotate:'Ny ledarkod',resetTitle:'Ny adminkod',resetHint:'Skapar en ny kod som företagets admin kan använda på en ny telefon. Koden visas en gång. Ge den bara till rätt person.',resetRevoke:'Ta även bort nuvarande admins',resetMake:'Skapa kod',resetShown:'Ny adminkod (visas en gång)',resetCopy:'Kopiera kod',resetCopied:'Kopierat',
   coSearch:'Sök företag eller org.nr',coOrg:'Org.nr',coProjects:'Projekt',coPeople:'Personer',coItems:'Rader',coLast:'Senaste rad',noCos:'Inga företag hittades',
   details:'Detaljer',closeDetails:'Stäng',rename:'Byt namn',renameSave:'Spara namn',renamed:'Företaget bytte namn',errCoName:'Namnet ska vara 2 till 60 tecken.',
   merge:'Slå ihop…',mergeTitle:'Slå ihop företag',mergeFrom:'Det här företaget försvinner',mergeInto:'Allt flyttas till',mergePick:'Välj företag',mergeCheck:'Kontrollera',
@@ -520,6 +520,12 @@ async function makeAdminCode(){
     S.co.newCode={org:r.org,name:r.name,code:code};S.co.reset=null;render();loadCompanies();
   }catch(e){fail(e);}
 }
+async function showLeadCode(org,name,rotate){
+  try{
+    var code=await rpc('admin_company_lead_code',{p_org:org,p_rotate:!!rotate});
+    S.co.newCode={org:org,name:name,code:code,lead:true};S.co.reset=null;render();window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){fail(e);}
+}
 async function openDetail(org){
   try{var d=await rpc('admin_company_detail',{p_org:org});S.co.detail={org:org,data:d};render();}catch(e){fail(e);}
 }
@@ -760,6 +766,7 @@ function viewCompanies(){
           h('button',{type:'button',class:'btn sm',onclick:function(){if(co.detail&&co.detail.org===r.org_nr){co.detail=null;render();}else openDetail(r.org_nr);}},co.detail&&co.detail.org===r.org_nr?t('closeDetails'):t('details')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.rename={org:r.org_nr,val:r.name,err:''};render();}},t('rename')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.reset={org:r.org_nr,name:r.name,revoke:false};co.newCode=null;render();window.scrollTo({top:0,behavior:'smooth'});}},t('adminCodeNew')),
+          h('button',{type:'button',class:'btn sm',onclick:function(){showLeadCode(r.org_nr,r.name,false);}},t('leadCodeBtn')),
           h('button',{type:'button',class:'btn sm',onclick:function(){co.merge={from:r.org_nr,into:'',res:null,type:''};render();window.scrollTo({top:0,behavior:'smooth'});}},t('merge'))));
     }
     list.append(card);
@@ -781,11 +788,12 @@ function resetPanel(){
 }
 function codePanel(){
   var c=S.co.newCode;
-  return h('div',{class:'panel',style:'margin-bottom:14px;border:2px solid var(--accent)'},h('h2',{class:'sec'},t('resetShown')),
+  return h('div',{class:'panel',style:'margin-bottom:14px;border:2px solid var(--accent)'},h('h2',{class:'sec'},t(c.lead?'leadCodeShown':'resetShown')),
     h('p',{class:'hint'},c.name+' · '+fmtOrg(c.org)),
     h('div',{style:'font-size:30px;font-weight:800;letter-spacing:.14em;margin:8px 0',class:'mono'},c.code),
     h('div',{class:'formacts'},
       h('button',{type:'button',class:'btn pri',onclick:function(){try{navigator.clipboard.writeText(c.code);toast(t('resetCopied'));}catch(e){toast(c.code);}}},t('resetCopy')),
+      c.lead?h('button',{type:'button',class:'btn',onclick:function(){showLeadCode(c.org,c.name,true);}},t('leadCodeRotate')):null,
       h('button',{type:'button',class:'btn',onclick:function(){S.co.newCode=null;render();}},t('closeDetails'))));
 }
 function detailPanel(data){
