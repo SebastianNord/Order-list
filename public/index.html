@@ -786,6 +786,7 @@ function authErr(e){
   if(m.indexOf('company_pending')>=0)return t('errPending');
   if(m.indexOf('company_rejected')>=0)return t('coRejected');
   if(m.indexOf('rate')>=0||m.indexOf('seconds')>=0||m.indexOf('too many')>=0)return t('errEmailRate');
+  if(m.indexOf('sending')>=0||m.indexOf('smtp')>=0||(e&&e.status===500&&m.indexOf('email')>=0))return t('errEmailSend');
   if(m.indexOf('already')>=0)return t('errEmailUsed');
   if(m.indexOf('expired')>=0||m.indexOf('token')>=0||m.indexOf('otp')>=0)return t('errBadCode');
   if(m.indexOf('password')>=0)return t('errPw');
