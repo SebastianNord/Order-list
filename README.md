@@ -29,7 +29,7 @@ The browser talks to Supabase directly. Access rules live in the database
 ### Roles
 
 - **App owner:** you, in `/admin.html`. Approves new companies, hands out company admin codes, manages preset suppliers and the catalog.
-- **Company admin:** the person who adds a new company (and chooses its admin code), or anyone who enters the admin code on a new phone. Starts projects and gives out the company's lead invite code.
+- **Company admin:** the person who adds a new company (and chooses its admin code), or anyone who enters the admin code on a new phone. Can also save an email and sign in with it on a new phone (see Admin email sign-in). Starts projects and gives out the company's lead invite code.
 
 - **Electrician:** joins with name and the project's join code (8 characters; older 6-character codes work until rotated). Join codes are unique across all companies. On a new phone the code is entered again. Adds items, changes or removes their own items until the lead has ordered them.
 - **Lead:** signs in with name and the company's **lead code** (the company admin hands it out; the app owner can read it in `/admin.html`, Companies tab, for companies without an admin). A lead sees every project of the company, opens one or creates a new one, and is lead in the projects they open. Reads and changes the join code under the Team tab. Can change or delete any item, add article numbers, mark items ordered, set the cut-off time and export CSV. Chooses the project's default supplier (required before ordering), tags items with a supplier, and adds, changes or deletes the company's own suppliers. Only leads can set an item's supplier; this is enforced in the database.
@@ -66,6 +66,21 @@ Not secret on purpose: the company list and each company's status are readable b
 - Rollback tests live in `supabase/tests/`. Run one in the SQL editor after its migration; it rolls itself back.
 - Preset suppliers are rows in `suppliers` with `company_id` null. Only the app
   owner changes them (SQL or dashboard); the app has no write access to them.
+
+## Admin email sign-in (steps in Supabase, done once)
+
+A company admin can save an email on the admin screen. The admin's account is the same user, so the admin role stays. On a new phone: admin screen, **Sign in with email (new phone)**, enter the email, then the 6-digit code from the email. Nothing changes in the database. It only works after these settings in the Supabase dashboard (project `order-list`):
+
+1. **Authentication, Sign In / Providers:** turn on **Allow manual linking**. Check that the **Email** provider is on and **Confirm email** is on.
+2. **Authentication, Email Templates:** the app asks for a 6-digit code, so two templates must contain `{{ .Token }}`.
+   - **Magic Link** (used for signing in on a new phone), for example:
+     `<h2>Your sign-in code</h2><p>{{ .Token }}</p>`
+   - **Change Email Address** (used when saving the email), for example:
+     `<h2>Confirm your email</h2><p>Your code: {{ .Token }}</p>`
+3. **Authentication, SMTP Settings:** set up your own SMTP (for example Resend or Brevo, both have free tiers) with a sender on your own domain. The built-in sender only allows a few emails per hour and, as far as I know, only delivers to people in your Supabase team.
+4. **Authentication, Rate Limits:** after step 3, check the emails-per-hour limit. **Providers, Email:** set the OTP expiry to 3600 seconds or less.
+
+Without these steps the admin screen shows "Could not send the email". Everything else keeps working: a lost phone is then fixed by the app owner, who creates a new admin code in `/admin.html`.
 
 ## Not built yet
 
