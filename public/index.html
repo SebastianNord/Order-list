@@ -892,13 +892,13 @@ function showAccount(mode){
   var err=h('div',{class:'err',role:'alert'});
   var btn=h('button',{type:'submit',class:'go2'},t(comp?'createCompany':(fin?'finishBtn':'createAccount')),icon('plus'));
   var codeBox=h('div',{class:'cogroup'},h('label',{for:'acode'},t('codeLabel'),code),h('p',{class:'hint'},t('codeHint3')));
-  var adminBox=h('div',{class:'cogroup',hidden:true},h('label',{for:'aorg'},t('orgLabel'),org),h('label',{for:'aadmin'},t('adminCode'),adminCode));
+  var adminBox=h('div',{class:'cogroup',hidden:true},h('label',{for:'aadmin'},t('adminCode'),adminCode));
   var toggle=h('button',{type:'button',class:'linkbtn',onclick:function(){
     useAdmin=!useAdmin;codeBox.hidden=useAdmin;adminBox.hidden=!useAdmin;toggle.textContent=t(useAdmin?'haveJoinCode':'haveAdminCode');}},t('haveAdminCode'));
   var compBox=h('div',{class:'cogroup'},h('label',{for:'aorg'},t('orgLabel'),org),h('label',{for:'aconame'},t('coName'),coName),h('p',{class:'hint'},t('newCompanyHint')));
   function payload(){
     if(comp)return {p_kind:'company',p_company:digits(org.value),p_company_name:coName.value.trim().replace(/\s+/g,' '),p_code:null};
-    if(useAdmin)return {p_kind:'admin',p_company:digits(org.value),p_code:adminCode.value.trim(),p_company_name:null};
+    if(useAdmin)return {p_kind:'admin',p_company:null,p_code:adminCode.value.trim(),p_company_name:null};
     return {p_kind:'code',p_code:code.value.replace(/[^A-Za-z0-9]/g,''),p_company:null,p_company_name:null};
   }
   async function submit(){
@@ -915,7 +915,6 @@ function showAccount(mode){
       if(p.p_company.length<10){err.textContent=t('errOrg');org.focus();return;}
       if(p.p_company_name.length<2){err.textContent=t('errCoName');coName.focus();return;}
     }else if(useAdmin){
-      if(p.p_company.length<10){err.textContent=t('errOrg');org.focus();return;}
       if(p.p_code.replace(/[^A-Za-z0-9]/g,'').length<6){err.textContent=t('errClaim');adminCode.focus();return;}
     }else if(p.p_code.length<4){err.textContent=t('needJoinCode');code.focus();return;}
     if(!sb){err.textContent=t('errServer');return;}

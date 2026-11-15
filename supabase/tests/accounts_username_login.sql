@@ -97,9 +97,9 @@ begin
 
   -- 4) second admin with the admin code (separate path), wrong code first
   perform t.as_user('d1000000-0000-0000-0000-000000000000');
-  r := public.finish_signup('David', 'admin', 'WRONGCODE', '5560160680');
+  r := public.finish_signup('David', 'admin', 'WRONGCODE');
   perform t.ok(r->>'error' = 'wrong_code', 'wrong admin code');
-  r := public.finish_signup('David', 'admin', adm, '5560160680');
+  r := public.finish_signup('David', 'admin', adm);
   perform t.ok(r->>'role' = 'admin', 'admin code makes a second admin');
   perform t.ok(public.is_company_admin('5560160680'), 'David is company admin');
 
