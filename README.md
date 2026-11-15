@@ -5,7 +5,7 @@ person adds what they need for tomorrow, the lead sees one merged list with who
 asked for what, tags each item with a supplier and exports a CSV per supplier.
 
 - Swedish and English, light and dark theme
-- One code box for everyone: name + code. A project's **join code** makes you a member, the company's **lead code** makes you a lead. Company admins use their own screen (company + admin code)
+- Real accounts: email, username and password. Log in with username (or email) and password. A code at sign-up decides the role: the project's **join code** makes you an electrician, the company's **lead code** makes you a lead. A company's **admin code** (separate path) makes you a second admin. Create a company to become its admin
 - Suppliers: a preset list shared by all companies, plus a company's own
   suppliers. A supplier is a name and a search link (`{q}` is replaced by the
   article number or search word). The lead picks a default supplier per project
@@ -26,25 +26,18 @@ asked for what, tags each item with a supplier and exports a CSV per supplier.
 The browser talks to Supabase directly. Access rules live in the database
 (row level security), so the public anon key in `config.js` is safe to publish.
 
-### Roles
+### Accounts and roles
 
-- **App owner:** you, in `/admin.html`. Approves new companies, hands out company admin codes, manages preset suppliers and the catalog.
-- **Company admin:** the person who adds a new company (and chooses its admin code), or anyone who enters the admin code on a new phone. Can also save an email and sign in with it on a new phone (see Admin email sign-in). Starts projects and gives out the company's lead invite code.
+- **Log in:** username (or email) and password. The Edge Function `login` looks up the email for the username on the server, so emails are never exposed to the browser. Forgot password: email plus a 6-digit code.
+- **Create account:** email, username (3 to 20 letters, digits, `.` `-` `_`, unique), password (at least 8 characters) and a code. The email is confirmed with a 6-digit code. One account belongs to one company and can be in several of its projects. Add more projects later with their join codes (picker screen).
+- **Electrician:** signs up with the project's join code (8 characters; older 6-character codes work until rotated). Adds items, changes or removes their own items until the lead has ordered them.
+- **Lead:** signs up with the company's **lead code**. Sees every project of the company, opens or creates projects and is lead in the ones they open. Reads and changes the join code under the Team tab. Can change or delete any item, add article numbers, mark items ordered, set the cut-off time, export CSV and manage the company's suppliers.
+- **Company admin:** creates the company (**Create company**: org number and name, valid checksum, one org number once) or signs up with a company's **admin code** (I have a company admin code: org number + code). The system makes the admin code and the lead code and shows them once when the company is created. Admins start projects, read and change the lead code and make a new admin code (the old one stops working). The admin code is stored hashed.
+- **App owner:** you, in `/admin.html` (magic link). Suppliers, catalog, companies and **Users**: list per company (username, email, role, projects), change company role (admin, lead, member), set project role or remove from a project, remove from company, send a password reset email, disable or enable, delete. Delete removes the account; items stay in the project as history. The owner account is never touched here. A disabled user is signed out; an open page can keep working until its token expires (up to 1 hour).
+- **Companies** are approved immediately. The pending and rejected states still exist for the owner (Companies tab) if a company has to be blocked.
+- **Wrong codes:** 10 wrong codes per account per 15 minutes, and 300 in total (also for people without an account). After that codes are refused until the window passes.
 
-- **Electrician:** joins with name and the project's join code (8 characters; older 6-character codes work until rotated). Join codes are unique across all companies. On a new phone the code is entered again. Adds items, changes or removes their own items until the lead has ordered them.
-- **Lead:** signs in with name and the company's **lead code** (the company admin hands it out; the app owner can read it in `/admin.html`, Companies tab, for companies without an admin). A lead sees every project of the company, opens one or creates a new one, and is lead in the projects they open. Reads and changes the join code under the Team tab. Can change or delete any item, add article numbers, mark items ordered, set the cut-off time and export CSV. Chooses the project's default supplier (required before ordering), tags items with a supplier, and adds, changes or deletes the company's own suppliers. Only leads can set an item's supplier; this is enforced in the database.
-- **Wrong codes:** each phone gets 10 wrong codes per 15 minutes, and all phones together 300. After that sign-in with a code is blocked until the window passes.
-
-### Joining and approval
-
-1. Someone adds a company with a valid org number and chooses an admin code. The company is **pending**: nobody can join projects in it yet.
-2. The app owner approves it in `/admin.html`, Companies tab (Pending shows first). Existing companies are already approved.
-3. The company admin gives the company **lead code** (shown on the admin screen) to the leads.
-4. A lead signs in with the lead code, then creates projects (the lead chooses the project ID) or opens existing ones. Only company admins and leads can create projects.
-5. A lead shares the project's join code or link (Team tab). Electricians enter it once per phone. Changing the code does not remove people already in.
-6. Forgotten admin code: the owner creates a new one in `/admin.html`. Codes are shown once (admin code) or can be read again by the right people (lead code, join code). The admin code is not stored in clear text.
-
-Not secret on purpose: the company list and each company's status are readable by everyone. Codes live in tables the app cannot read directly (`company_access`, `project_secrets`, `company_admins`, `company_leads`); only the database functions use them.
+Not secret on purpose: the company list and status are readable by signed-in users. Codes live in tables the app cannot read directly (`company_access`, `project_secrets`, `company_admins`, `company_leads`, `profiles`); only the database functions use them.
 
 ## Deploy on Cloudflare Pages
 
@@ -61,35 +54,26 @@ Not secret on purpose: the company list and each company's status are readable b
   plus the `join_project` and `add_company` functions. Schema changes live in
   `supabase/migrations/` and are applied in order: `initial_order_list_schema`,
   `add_company_layer`, `add_suppliers`, `suppliers_grants`,
-  `items_supplier_lead_only`, then the files in `supabase/migrations/` from `20261109221000_add_admin_area` on, including `20261115010000_company_admin_and_join_codes`, `20261115120000_join_with_code` and `20261115140000_company_lead_code_login`, `20261115170000_team_member_list` and `20261115190000_my_access`.
+  `items_supplier_lead_only`, then the files in `supabase/migrations/` from `20261109221000_add_admin_area` on, including `20261115010000_company_admin_and_join_codes`, `20261115120000_join_with_code` and `20261115140000_company_lead_code_login`, `20261115170000_team_member_list`, `20261115190000_my_access` and `20261116100000_accounts_username_login` (accounts; **clean cut**: old anonymous members and roles are removed, items stay).
   Apply a new migration **before** deploying the page that needs it.
 - Rollback tests live in `supabase/tests/`. Run one in the SQL editor after its migration; it rolls itself back.
 - Preset suppliers are rows in `suppliers` with `company_id` null. Only the app
   owner changes them (SQL or dashboard); the app has no write access to them.
 
-## Admin email sign-in (steps in Supabase, done once)
+## Supabase settings (steps in the dashboard, project `order-list`)
 
-A company admin can save an email on the admin screen. The admin's account is the same user, so the admin role stays. On a new phone: admin screen, **Sign in with email (new phone)**, enter the email, then the 6-digit code from the email. Nothing changes in the database. It only works after these settings in the Supabase dashboard (project `order-list`):
+Needed for sign-up and password reset by email:
 
-1. **Authentication, Sign In / Providers:** turn on **Allow manual linking**. Check that the **Email** provider is on and **Confirm email** is on.
-2. **Authentication, Email Templates:** the app asks for a 6-digit code, so two templates must contain `{{ .Token }}`.
-   - **Magic Link** (used for signing in on a new phone), for example:
-     `<h2>Your sign-in code</h2><p>{{ .Token }}</p>`
-   - **Change Email Address** (used when saving the email), for example:
-     `<h2>Confirm your email</h2><p>Your code: {{ .Token }}</p>`
-3. **Authentication, SMTP Settings:** set up your own SMTP (for example Resend or Brevo, both have free tiers) with a sender on your own domain. The built-in sender only allows a few emails per hour and, as far as I know, only delivers to people in your Supabase team.
-4. **Authentication, Rate Limits:** after step 3, check the emails-per-hour limit. **Providers, Email:** set the OTP expiry to 3600 seconds or less.
+1. **Authentication, Sign In / Providers:** Email provider on, **Confirm email** on. Anonymous sign-ins can be switched **off** (the app no longer uses them). Minimum password length 8.
+2. **Authentication, Email Templates:** the app asks for a 6-digit code, so these templates must contain `{{ .Token }}`:
+   - **Confirm signup**, for example `<h2>Your confirmation code</h2><p>{{ .Token }}</p>`
+   - **Reset Password**, for example `<h2>Your reset code</h2><p>{{ .Token }}</p>`
+   - **Magic Link** (the owner signs in to `/admin.html` with a link, this one keeps its link).
+3. **Authentication, SMTP Settings:** your own SMTP (for example Resend or Brevo, free tiers) with a sender on your own domain. The built-in sender only allows a few emails per hour and, as far as I know, only delivers to people in your Supabase team.
+4. **Authentication, Rate Limits:** after step 3, check the emails-per-hour limit. **Providers, Email:** OTP expiry 3600 seconds or less.
+5. **Edge Function `login`** (source in `supabase/functions/login/`): deploy it with JWT verification on (`supabase functions deploy login`, or the dashboard). It uses the built-in `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`; nothing to configure.
 
-Without these steps the admin screen shows "Could not send the email". Everything else keeps working: a lost phone is then fixed by the app owner, who creates a new admin code in `/admin.html`.
-
-## Email and password for members and leads
-
-Anyone can add an email and a password to their account (a banner in the app, and on the lead's project screen). The account is the same user, so the member or lead role stays. On a new phone: **Sign in with email and password** on the first screen. **Forgot password?** sends a 6-digit code; enter it with a new password. Needs the migration `20261115190000_my_access` (the app asks which companies and projects the account belongs to) and the settings above, plus one more:
-
-- **Authentication, Email Templates, Reset Password:** must contain `{{ .Token }}`, for example `<h2>Your reset code</h2><p>{{ .Token }}</p>`.
-- Passwords need at least 8 characters (the app checks this; you can also set the minimum in **Sign In / Providers, Email**).
-
-Existing users keep working without a password and see a banner asking them to add one. Admins who saved an email earlier can set a password with **Forgot password?**.
+Without step 2 or 3 sign-up cannot send its code. Without step 5 the login screen shows a server error.
 
 ## Not built yet
 
