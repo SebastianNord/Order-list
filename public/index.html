@@ -201,8 +201,8 @@ input.art:focus{outline:none;border-color:var(--accent)}
 .join p.lead{color:var(--plum-muted);max-width:44ch;margin:0 0 24px;font-size:17px}
 .form{background:var(--surface);color:var(--fg);border-radius:22px;padding:20px;display:grid;gap:14px;max-width:460px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
 .form label{display:grid;gap:6px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.form input[type=text]{border:2px solid var(--line);background:var(--bg);border-radius:14px;padding:13px 14px;font-size:17px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--fg)}
-.form input[type=text]:focus{outline:none;border-color:var(--accent)}
+.form input[type=text],.form input[type=password],.form input[type=email],.form input[type=tel],.form input[type=url],.form input[type=number]{border:2px solid var(--line);background:var(--bg);border-radius:14px;padding:13px 14px;font-size:17px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--fg)}
+.form input[type=text]:focus,.form input[type=password]:focus,.form input[type=email]:focus,.form input[type=tel]:focus,.form input[type=url]:focus,.form input[type=number]:focus{outline:none;border-color:var(--accent)}
 .roles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .role{padding:12px;border-radius:14px;border:2px solid var(--line);font-weight:600;text-align:center;color:var(--fg)}
 .role[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
