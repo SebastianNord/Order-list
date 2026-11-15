@@ -72,6 +72,9 @@ button:not(:disabled):active{filter:brightness(.95)}
 .addbox[hidden],.simbox[hidden]{display:none}
 .simbox{display:grid;gap:6px}
 .sim{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:10px;background:var(--surface2);color:var(--fg);font-size:15px}
+.projlist{display:grid;gap:10px;margin:0 0 22px}
+.proj{display:flex;justify-content:space-between;align-items:center;text-align:left;width:100%}
+.proj .nm{font-weight:700}.proj .sa{opacity:.7;font-size:14px}
 .sim .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sim .sa{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none}
 
@@ -301,7 +304,7 @@ function leaveAnim(ids){
 
 /* ---------- text ---------- */
 var T={
- en:{newHere:'New here',codeFromLead:'The code your lead gave you.',haveJoined:'Joined before? Use project ID and name instead',backNew:'New here? Use the join code',imLead:'I am a lead, or my company is not added yet',backSimple:'Back',errNoMember:'No electrician with that name in that project. New here? Use the join code from your lead.',chooseCo:'Which company?',needJoinCode:'Enter the join code from your lead.',tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
+ en:{codePh2:'Your code',codeLabel:'Code',codeHint2:'Electricians: the join code from your lead. Leads: the company lead code.',errCode:'Wrong code. Ask your lead for the current one.',errTooMany:'Too many wrong codes. Try again in 15 minutes.',imAdmin:'I am the company admin, or my company is not added yet',imAdminTitle:'Company admin',adminScreenHint:'Pick your company. New company: add it below. Then continue to your projects.',continueBtn:'Continue',notAdminYet:'Enter the admin code below first.',leadBack:'Back to projects at',pickProject:'Pick a project, or create a new one.',newProject:'New project',createProject:'Create project',noProjects:'No projects yet. Create the first one.',errProjExists:'That project ID already exists in your company. Pick it from the list.',leadExpired:'Your lead sign-in has expired. Enter the lead code again.',newHere:'New here',codeFromLead:'The code your lead gave you.',haveJoined:'Joined before? Use project ID and name instead',backNew:'New here? Use the join code',imLead:'I am a lead, or my company is not added yet',backSimple:'Back',errNoMember:'No electrician with that name in that project. New here? Use the join code from your lead.',chooseCo:'Which company?',needJoinCode:'Enter the join code from your lead.',tagline:'Tell the lead what you need for tomorrow.',lead:'Everyone adds items to the project list. The lead sees who needs what and orders it in one go.',
   projectId:'Project ID',yourName:'Your name',role:'I am',electrician:'Electrician',leadRole:'Lead electrician',join:'Join project',demo:'Look around with a demo project',
   demoHint:'The demo uses made-up colleagues. Nothing is saved.',needName:'Enter your name.',needPid:'Enter a project ID, for example VASA-12.',
   pidPh:'e.g. VASA-12',namePh:'e.g. Sebastian',whatNeed:'What do you need for tomorrow?',add:'Add item',cutoff:'Cut-off',left:'left',closed:'Closed for today. New items are marked late.',
@@ -315,12 +318,12 @@ var T={
   offline:'Cannot reach the server. Check your connection.',slow:'Cannot reach the shared list yet. What you see may be out of date.',
   addedToast:'Added',removed:'Removed',errWrite:'Could not save. Try again.',copyManual:'Select the text and copy it:',you:'you',by:'by',
   fav:'Favorite',favs:'Favorites',noCsv:'Nothing to export yet.',delAll:'Delete for everyone',delSure:'Tap again to delete',delOne:'Remove request',leadCode:'Lead code',leadCodeHint:'New project? Choose a code of at least 4 characters and share it only with other leads. Existing project? Enter its code.',codePh:'Your secret lead code',needCode:'Enter the lead code (at least 4 characters).',errNoProject:'No project with that ID. Ask your lead to create it first.',errWrongCode:'Wrong lead code for this project.',errServer:'Could not reach the server. Check your connection and try again.',rejoin:'Please join the project again.',
-  company:'Company',companyPh:'Search name or org. number',noMatch:'No match. Add the company below.',addCompany:'Company not listed? Add it',orgNr:'Org. no.',orgLabel:'Organisation number',orgPh:'e.g. 556012-5790',coName:'Company name',coNamePh:'e.g. Nord Elinstallation AB',saveCompany:'Add company',alreadyAdded:'Already added. Tap to use it:',needCompany:'Choose your company.',errOrg:'That organisation number is not valid. Check the 10 digits.',errPersonal:'Organisation numbers that start like a personal number (sole traders) are not supported.',errCoName:'Enter the company name (2 to 60 characters).',coExists:'That company was already added. Selected it.',errNoCompany:'Company not found. Choose or add it first.',adminCode:'Admin code',adminCodePh:'At least 6 letters or digits',adminCodeHint:'New company: you become its admin. Keep the code, you need it on a new phone.',errAdminCode:'The admin code needs at least 6 letters or digits.',coAdded:'Company added. It can be used once Order List has approved it.',coPending:'Waiting for approval. Projects open once it is approved.',coRejected:'This company was not approved.',errPending:'This company is not approved yet. Try again later.',joinCode:'Join code',joinCodePh:'From your lead',joinCodeHint:'Ask your lead for the join code or a link. Not needed if you are already in the project.',errJoinCode:'Wrong join code. Ask your lead for the current one.',errNotAllowed:'Only the company admin or an invited lead can start a new project. Enter your invite code below.',inviteCode:'Lead invite code',inviteGo:'Use invite code',errInvite:'Wrong invite code.',invited:'Invite accepted. You can start projects now.',iAmAdmin:'I am the company admin',claimGo:'Become admin',errClaim:'Wrong admin code.',claimed:'You are now the company admin.',coAdminTitle:'Company admin',leadInviteHint:'Give this code to leads who should be able to start projects.',tmCopy:'Copy',tmNew:'New code',tmNewSure:'Tap again for a new code',team:'Team',tmLoading:'Loading...',tmJoinTitle:'Join code',tmJoinHint:'Share the code or the link with your crew. People already in the project stay in when you change it.',tmCopyLink:'Copy link',tmShare:'Share',tmShareText:'Join our order list',tmInviteTitle:'Lead invite code (company)',
+  company:'Company',companyPh:'Search name or org. number',noMatch:'No match. Add the company below.',addCompany:'Company not listed? Add it',orgNr:'Org. no.',orgLabel:'Organisation number',orgPh:'e.g. 556012-5790',coName:'Company name',coNamePh:'e.g. Nord Elinstallation AB',saveCompany:'Add company',alreadyAdded:'Already added. Tap to use it:',needCompany:'Choose your company.',errOrg:'That organisation number is not valid. Check the 10 digits.',errPersonal:'Organisation numbers that start like a personal number (sole traders) are not supported.',errCoName:'Enter the company name (2 to 60 characters).',coExists:'That company was already added. Selected it.',errNoCompany:'Company not found. Choose or add it first.',adminCode:'Admin code',adminCodePh:'At least 6 letters or digits',adminCodeHint:'New company: you become its admin. Keep the code, you need it on a new phone.',errAdminCode:'The admin code needs at least 6 letters or digits.',coAdded:'Company added. It can be used once Order List has approved it.',coPending:'Waiting for approval. Projects open once it is approved.',coRejected:'This company was not approved.',errPending:'This company is not approved yet. Try again later.',joinCode:'Join code',joinCodePh:'From your lead',joinCodeHint:'Ask your lead for the join code or a link. Not needed if you are already in the project.',errJoinCode:'Wrong join code. Ask your lead for the current one.',errNotAllowed:'Only the company admin or an invited lead can start a new project. Enter your invite code below.',inviteCode:'Lead invite code',inviteGo:'Use invite code',errInvite:'Wrong invite code.',invited:'Invite accepted. You can start projects now.',iAmAdmin:'I am the company admin',claimGo:'Become admin',errClaim:'Wrong admin code.',claimed:'You are now the company admin.',coAdminTitle:'Company admin',leadInviteHint:'Give this code to leads. They sign in with it, see every project and can start new ones.',tmCopy:'Copy',tmNew:'New code',tmNewSure:'Tap again for a new code',team:'Team',tmLoading:'Loading...',tmJoinTitle:'Join code',tmJoinHint:'Share the code or the link with your crew. People already in the project stay in when you change it.',tmCopyLink:'Copy link',tmShare:'Share',tmShareText:'Join our order list',tmInviteTitle:'Lead code (company)',
   suppliers:'Suppliers',supHint:'Pick the default supplier for this project. Items you do not tag yourself use it.',setDefault:'Make default',defaultPill:'Default',own:'Own',supDelete:'Delete supplier',supDeleteSure:'Tap again to delete',
   supAdd:'Add your own supplier',supEditTitle:'Change supplier',supName:'Supplier name',supNamePh:'e.g. Elgrossisten',supUrl:'Search link',supUrlPh:'https://www.example.se/search?q={q}',supUrlHint:'Use {q} where the article number or search word goes. You confirm each match by hand.',
   supSave:'Save supplier',supCancel:'Cancel',needSupName:'Enter a supplier name (2 to 40 characters).',errSupUrl:'The link must start with https:// and contain {q}.',supDup:'You already have a supplier with that name.',supSaved:'Supplier saved',supDeleted:'Supplier deleted',
   pickDefault:'Choose a default supplier for this project before ordering.',pickDefaultBtn:'Choose supplier',findAt:'Find at',useDefault:'Default',supplierFor:'Supplier for',allSup:'All suppliers',noSup:'No supplier'},
- sv:{newHere:'Ny här',codeFromLead:'Koden du fått av din ledare.',haveJoined:'Varit med förut? Använd projekt-ID och namn istället',backNew:'Ny här? Använd gå med-koden',imLead:'Jag är arbetsledare, eller mitt företag är inte tillagt',backSimple:'Tillbaka',errNoMember:'Ingen elektriker med det namnet i projektet. Ny här? Använd gå med-koden från din ledare.',chooseCo:'Vilket företag?',needJoinCode:'Skriv gå med-koden från din ledare.',tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
+ sv:{codePh2:'Din kod',codeLabel:'Kod',codeHint2:'Elektriker: gå med-koden från din ledare. Ledare: företagets ledarkod.',errCode:'Fel kod. Be din ledare om den aktuella.',errTooMany:'För många felaktiga koder. Försök igen om 15 minuter.',imAdmin:'Jag är företagets admin, eller mitt företag är inte tillagt',imAdminTitle:'Företagsadmin',adminScreenHint:'Välj ditt företag. Nytt företag: lägg till det nedan. Fortsätt sedan till dina projekt.',continueBtn:'Fortsätt',notAdminYet:'Skriv adminkoden nedan först.',leadBack:'Tillbaka till projekt hos',pickProject:'Välj ett projekt, eller skapa ett nytt.',newProject:'Nytt projekt',createProject:'Skapa projekt',noProjects:'Inga projekt än. Skapa det första.',errProjExists:'Projekt-ID:t finns redan i ditt företag. Välj det i listan.',leadExpired:'Din ledarinloggning har gått ut. Skriv ledarkoden igen.',newHere:'Ny här',codeFromLead:'Koden du fått av din ledare.',haveJoined:'Varit med förut? Använd projekt-ID och namn istället',backNew:'Ny här? Använd gå med-koden',imLead:'Jag är arbetsledare, eller mitt företag är inte tillagt',backSimple:'Tillbaka',errNoMember:'Ingen elektriker med det namnet i projektet. Ny här? Använd gå med-koden från din ledare.',chooseCo:'Vilket företag?',needJoinCode:'Skriv gå med-koden från din ledare.',tagline:'Säg till ledaren vad du behöver till i morgon.',lead:'Alla lägger in vad de behöver i projektets lista. Ledaren ser vem som behöver vad och beställer allt på en gång.',
   projectId:'Projekt-ID',yourName:'Ditt namn',role:'Jag är',electrician:'Elektriker',leadRole:'Arbetsledare',join:'Gå med i projektet',demo:'Kolla runt i ett demoprojekt',
   demoHint:'Demon använder påhittade kollegor. Inget sparas.',needName:'Skriv ditt namn.',needPid:'Skriv ett projekt-ID, till exempel VASA-12.',
   pidPh:'t.ex. VASA-12',namePh:'t.ex. Sebastian',whatNeed:'Vad behöver du till i morgon?',add:'Lägg till',cutoff:'Sista beställning',left:'kvar',closed:'Stängt för i dag. Nya rader markeras som sena.',
@@ -334,7 +337,7 @@ var T={
   offline:'Kan inte nå servern. Kontrollera uppkopplingen.',slow:'Kan inte nå den delade listan än. Det du ser kan vara inaktuellt.',
   addedToast:'Tillagd',removed:'Borttagen',errWrite:'Kunde inte spara. Försök igen.',copyManual:'Markera texten och kopiera:',you:'du',by:'av',
   fav:'Favorit',favs:'Favoriter',noCsv:'Inget att exportera än.',delAll:'Ta bort för alla',delSure:'Tryck igen för att ta bort',delOne:'Ta bort rad',leadCode:'Ledarkod',leadCodeHint:'Nytt projekt? Välj en kod på minst 4 tecken och dela den bara med andra ledare. Finns projektet? Skriv dess kod.',codePh:'Din hemliga ledarkod',needCode:'Skriv ledarkoden (minst 4 tecken).',errNoProject:'Inget projekt med det ID:t. Be din ledare skapa det först.',errWrongCode:'Fel ledarkod för det här projektet.',errServer:'Kunde inte nå servern. Kontrollera uppkopplingen och försök igen.',rejoin:'Gå med i projektet igen.',
-  company:'Företag',companyPh:'Sök namn eller org.nr',noMatch:'Ingen träff. Lägg till företaget nedan.',addCompany:'Saknas företaget? Lägg till det',orgNr:'Org.nr',orgLabel:'Organisationsnummer',orgPh:'t.ex. 556012-5790',coName:'Företagsnamn',coNamePh:'t.ex. Nord Elinstallation AB',saveCompany:'Lägg till företag',alreadyAdded:'Finns redan. Tryck för att välja:',needCompany:'Välj ditt företag.',errOrg:'Organisationsnumret är inte giltigt. Kontrollera de 10 siffrorna.',errPersonal:'Organisationsnummer som börjar som ett personnummer (enskild firma) stöds inte.',errCoName:'Skriv företagsnamnet (2 till 60 tecken).',coExists:'Företaget fanns redan. Det är valt.',errNoCompany:'Företaget hittades inte. Välj eller lägg till det först.',adminCode:'Adminkod',adminCodePh:'Minst 6 tecken',adminCodeHint:'Nytt företag: du blir företagets admin. Spara koden, du behöver den på en ny telefon.',errAdminCode:'Adminkoden måste vara minst 6 bokstäver eller siffror.',coAdded:'Företaget är tillagt. Det kan användas när Order List har godkänt det.',coPending:'Väntar på godkännande. Projekt öppnas när det är godkänt.',coRejected:'Företaget blev inte godkänt.',errPending:'Företaget är inte godkänt än. Försök igen senare.',joinCode:'Gå med-kod',joinCodePh:'Från din ledare',joinCodeHint:'Fråga din ledare efter koden eller en länk. Behövs inte om du redan är med i projektet.',errJoinCode:'Fel kod. Be din ledare om den aktuella koden.',errNotAllowed:'Bara företagets admin eller en inbjuden ledare kan starta nya projekt. Skriv din inbjudningskod nedan.',inviteCode:'Inbjudningskod för ledare',inviteGo:'Använd inbjudningskod',errInvite:'Fel inbjudningskod.',invited:'Inbjudan godkänd. Du kan starta projekt nu.',iAmAdmin:'Jag är företagets admin',claimGo:'Bli admin',errClaim:'Fel adminkod.',claimed:'Du är nu företagets admin.',coAdminTitle:'Företagsadmin',leadInviteHint:'Ge den här koden till ledare som ska kunna starta projekt.',tmCopy:'Kopiera',tmNew:'Ny kod',tmNewSure:'Tryck igen för ny kod',team:'Team',tmLoading:'Laddar...',tmJoinTitle:'Gå med-kod',tmJoinHint:'Dela koden eller länken med ditt gäng. De som redan är med i projektet stannar kvar när du byter kod.',tmCopyLink:'Kopiera länk',tmShare:'Dela',tmShareText:'Gå med i vår beställningslista',tmInviteTitle:'Inbjudningskod för ledare (företaget)',
+  company:'Företag',companyPh:'Sök namn eller org.nr',noMatch:'Ingen träff. Lägg till företaget nedan.',addCompany:'Saknas företaget? Lägg till det',orgNr:'Org.nr',orgLabel:'Organisationsnummer',orgPh:'t.ex. 556012-5790',coName:'Företagsnamn',coNamePh:'t.ex. Nord Elinstallation AB',saveCompany:'Lägg till företag',alreadyAdded:'Finns redan. Tryck för att välja:',needCompany:'Välj ditt företag.',errOrg:'Organisationsnumret är inte giltigt. Kontrollera de 10 siffrorna.',errPersonal:'Organisationsnummer som börjar som ett personnummer (enskild firma) stöds inte.',errCoName:'Skriv företagsnamnet (2 till 60 tecken).',coExists:'Företaget fanns redan. Det är valt.',errNoCompany:'Företaget hittades inte. Välj eller lägg till det först.',adminCode:'Adminkod',adminCodePh:'Minst 6 tecken',adminCodeHint:'Nytt företag: du blir företagets admin. Spara koden, du behöver den på en ny telefon.',errAdminCode:'Adminkoden måste vara minst 6 bokstäver eller siffror.',coAdded:'Företaget är tillagt. Det kan användas när Order List har godkänt det.',coPending:'Väntar på godkännande. Projekt öppnas när det är godkänt.',coRejected:'Företaget blev inte godkänt.',errPending:'Företaget är inte godkänt än. Försök igen senare.',joinCode:'Gå med-kod',joinCodePh:'Från din ledare',joinCodeHint:'Fråga din ledare efter koden eller en länk. Behövs inte om du redan är med i projektet.',errJoinCode:'Fel kod. Be din ledare om den aktuella koden.',errNotAllowed:'Bara företagets admin eller en inbjuden ledare kan starta nya projekt. Skriv din inbjudningskod nedan.',inviteCode:'Inbjudningskod för ledare',inviteGo:'Använd inbjudningskod',errInvite:'Fel inbjudningskod.',invited:'Inbjudan godkänd. Du kan starta projekt nu.',iAmAdmin:'Jag är företagets admin',claimGo:'Bli admin',errClaim:'Fel adminkod.',claimed:'Du är nu företagets admin.',coAdminTitle:'Företagsadmin',leadInviteHint:'Ge den här koden till ledare. De loggar in med den, ser alla projekt och kan starta nya.',tmCopy:'Kopiera',tmNew:'Ny kod',tmNewSure:'Tryck igen för ny kod',team:'Team',tmLoading:'Laddar...',tmJoinTitle:'Gå med-kod',tmJoinHint:'Dela koden eller länken med ditt gäng. De som redan är med i projektet stannar kvar när du byter kod.',tmCopyLink:'Kopiera länk',tmShare:'Dela',tmShareText:'Gå med i vår beställningslista',tmInviteTitle:'Ledarkod (företaget)',
   suppliers:'Leverantörer',supHint:'Välj standardleverantör för det här projektet. Rader du inte själv markerar använder den.',setDefault:'Gör till standard',defaultPill:'Standard',own:'Egen',supDelete:'Ta bort leverantör',supDeleteSure:'Tryck igen för att ta bort',
   supAdd:'Lägg till egen leverantör',supEditTitle:'Ändra leverantör',supName:'Leverantörens namn',supNamePh:'t.ex. Elgrossisten',supUrl:'Söklänk',supUrlPh:'https://www.exempel.se/sok?q={q}',supUrlHint:'Skriv {q} där artikelnumret eller sökordet ska in. Du bekräftar varje träff själv.',
   supSave:'Spara leverantör',supCancel:'Avbryt',needSupName:'Skriv leverantörens namn (2 till 40 tecken).',errSupUrl:'Länken måste börja med https:// och innehålla {q}.',supDup:'Du har redan en leverantör med det namnet.',supSaved:'Leverantören sparades',supDeleted:'Leverantören togs bort',
@@ -768,30 +771,19 @@ function hhmm(iso){var d=new Date(iso);return isNaN(d)?'':pad(d.getHours())+':'+
 function dayLabel(ds){return new Date(ds+'T12:00:00').toLocaleDateString(lang==='sv'?'sv-SE':'en-GB',{weekday:'long',day:'numeric',month:'short'});}
 
 /* ---------- screens ---------- */
-/* simple join: name + the project's join code (first time), or project ID + name (joined before) */
+/* one code box: a join code makes you a member, the company lead code makes you a lead */
+function leadMemo(){try{var m=JSON.parse(ls('ol.lead')||'null');return(m&&m.co&&m.coName&&m.name)?m:null;}catch(e){return null;}}
 function showJoin(){
-  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=false;
-  var mode='new',picked=null;
+  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=false;S.projCtx=null;
   var name=h('input',{type:'text',id:'uname',autocomplete:'given-name',placeholder:t('namePh'),maxlength:'30'});
-  var code=h('input',{type:'text',id:'jcode',autocomplete:'off',autocapitalize:'characters',spellcheck:'false',placeholder:t('joinCodePh'),maxlength:'12'});
-  var codeBox=h('label',{for:'jcode'},t('joinCode'),code,h('p',{class:'hint'},t('codeFromLead')));
-  var pid=h('input',{type:'text',id:'pid',autocomplete:'off',autocapitalize:'characters',placeholder:t('pidPh'),maxlength:'24'});
-  var pidBox=h('label',{for:'pid',hidden:true},t('projectId'),pid);
-  var chooseBox=h('div',{class:'addbox',hidden:true});
+  var code=h('input',{type:'text',id:'jcode',autocomplete:'off',autocapitalize:'characters',spellcheck:'false',placeholder:t('codePh2'),maxlength:'12'});
   var err=h('div',{class:'err',role:'alert'});
   var btn=h('button',{type:'submit',class:'go2'},t('join'),icon('plus'));
-  var swap=h('button',{type:'button',class:'linkbtn',onclick:function(){setMode(mode==='new'?'back':'new');}},t('haveJoined'));
-  function setMode(m){
-    mode=m;picked=null;codeBox.hidden=(m!=='new');pidBox.hidden=(m!=='back');chooseBox.hidden=true;err.textContent='';
-    swap.textContent=t(m==='new'?'haveJoined':'backNew');
-  }
   function joinErr(e){
     var m=String((e&&e.message)||'');
-    if(m.indexOf('wrong_join_code')>=0)return t('errJoinCode');
+    if(m.indexOf('too_many_attempts')>=0)return t('errTooMany');
     if(m.indexOf('company_pending')>=0)return t('errPending');
     if(m.indexOf('company_rejected')>=0)return t('coRejected');
-    if(m.indexOf('rejoin_not_found')>=0)return t('errNoMember');
-    if(m.indexOf('bad_project_id')>=0)return t('needPid');
     if(m.indexOf('bad_name')>=0)return t('needName');
     return t('errServer');
   }
@@ -800,45 +792,94 @@ function showJoin(){
     err.textContent='';
     if(isDemo){start({co:'DEMO',coName:'Demo',pid:'DEMO',name:n||'Demo',role:'electrician'});return;}
     if(!n){err.textContent=t('needName');name.focus();return;}
-    var c=code.value.replace(/[^A-Za-z0-9]/g,''),p=pid.value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
-    if(mode==='new'&&c.length<4){err.textContent=t('needJoinCode');code.focus();return;}
-    if(mode==='back'&&p.length<2){err.textContent=t('needPid');pid.focus();return;}
+    var c=code.value.replace(/[^A-Za-z0-9]/g,'');
+    if(c.length<4){err.textContent=t('needJoinCode');code.focus();return;}
     if(!sb){err.textContent=t('errServer');return;}
     btn.disabled=true;
     try{
       await ensureAuth();
-      var r=mode==='new'?await sb.rpc('join_with_code',{p_code:c,p_name:n}):await sb.rpc('rejoin_project',{p_id:p,p_name:n,p_company:picked});
+      var r=await sb.rpc('join_with_code',{p_code:c,p_name:n});
       if(r.error)throw r.error;
-      if(r.data.choose){
-        chooseBox.replaceChildren(h('div',{class:'hint'},t('chooseCo')));
-        r.data.choose.forEach(function(co){chooseBox.append(h('button',{type:'button',class:'sim',onclick:function(){picked=co.org_nr;go(false);}},h('span',{class:'nm'},co.name),h('span',{class:'sa'},fmtOrg(co.org_nr))));});
-        chooseBox.hidden=false;btn.disabled=false;return;
+      if(r.data.error){err.textContent=t('errCode');btn.disabled=false;return;}
+      if(r.data.kind==='lead'){
+        ls('ol.lead',JSON.stringify({co:r.data.company_id,coName:r.data.company_name,name:r.data.name}));
+        showProjects({co:r.data.company_id,coName:r.data.company_name,name:r.data.name});return;
       }
-      ls('ol.co',JSON.stringify({org_nr:r.data.company_id,name:r.data.company_name}));
       start({co:r.data.company_id,coName:r.data.company_name,pid:r.data.project_id,name:r.data.name,role:r.data.role});
     }catch(e){err.textContent=joinErr(e);btn.disabled=false;}
   }
+  var lm=leadMemo();
   var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go(false);}},
+    lm?h('button',{type:'button',class:'alt',onclick:function(){showProjects({co:lm.co,coName:lm.coName,name:lm.name});}},t('leadBack')+' '+lm.coName):null,
     h('label',{for:'uname'},t('yourName'),name),
-    codeBox,pidBox,chooseBox,swap,
+    h('label',{for:'jcode'},t('codeLabel'),code,h('p',{class:'hint'},t('codeHint2'))),
     err,btn,
-    h('button',{type:'button',class:'linkbtn',onclick:showFullJoin},t('imLead')),
+    h('button',{type:'button',class:'linkbtn',onclick:showFullJoin},t('imAdmin')),
     h('button',{type:'button',class:'alt',onclick:function(){go(true);}},t('demo')),
     h('p',{class:'hint'},t('demoHint')));
   app.replaceChildren(h('div',{class:'join'},h('div',{class:'wrap'},
     h('div',{class:'brandrow'},brand(),h('div',{class:'sp'}),langSeg()),
     h('h1',null,t('tagline')),h('p',{class:'lead'},t('lead')),form)));
-  /* a shared link carries the join code (and project): fill it in, then clear the address bar */
-  var q=new URLSearchParams(location.search),pp=(q.get('p')||'').toUpperCase().replace(/[^A-Z0-9_-]/g,''),j=(q.get('j')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,12);
-  if(pp||j||q.get('c')){
+  /* a shared link carries the code: fill it in, then clear the address bar */
+  var q=new URLSearchParams(location.search),j=(q.get('j')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,12);
+  if(j||q.get('c')||q.get('p')){
     try{history.replaceState(null,'',location.pathname);}catch(e){}
     if(j)code.value=j;
-    else if(pp){pid.value=pp;setMode('back');}
   }
 }
 
+/* leads and company admins: every project of the company, open one or create a new one */
+async function showProjects(m){
+  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=false;S.projCtx=m;
+  var list=h('div',{class:'projlist'},h('p',{class:'hint'},t('tmLoading')));
+  var err=h('div',{class:'err',role:'alert'});
+  var idIn=h('input',{type:'text',id:'newpid',autocomplete:'off',autocapitalize:'characters',placeholder:t('pidPh'),maxlength:'24'});
+  var mk=h('button',{type:'submit',class:'go2'},t('createProject'),icon('plus'));
+  function fail(e){
+    var x=String((e&&e.message)||'');
+    if(x.indexOf('not_allowed')>=0){ls('ol.lead',null);showJoin();return t('leadExpired');}
+    if(x.indexOf('company_pending')>=0)return t('errPending');
+    if(x.indexOf('project_exists')>=0)return t('errProjExists');
+    if(x.indexOf('bad_project_id')>=0)return t('needPid');
+    if(x.indexOf('project_not_found')>=0)return t('errNoProject');
+    return t('errServer');
+  }
+  async function enter(fn,args){
+    err.textContent='';
+    try{
+      await ensureAuth();
+      var r=await sb.rpc(fn,args);
+      if(r.error)throw r.error;
+      ls('ol.co',JSON.stringify({org_nr:r.data.company_id,name:r.data.company_name}));
+      start({co:r.data.company_id,coName:r.data.company_name,pid:r.data.project_id,name:r.data.name,role:r.data.role});
+    }catch(e){err.textContent=fail(e);}
+  }
+  var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){
+    e.preventDefault();
+    var p=idIn.value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
+    if(p.length<2){err.textContent=t('needPid');idIn.focus();return;}
+    enter('create_project',{p_company:m.co,p_id:p,p_name:m.name});
+  }},
+    h('label',{for:'newpid'},t('newProject'),idIn),err,mk);
+  app.replaceChildren(h('div',{class:'join'},h('div',{class:'wrap'},
+    h('div',{class:'brandrow'},brand(),h('div',{class:'sp'}),langSeg()),
+    h('h1',null,m.coName),h('p',{class:'lead'},t('pickProject')),list,form,
+    h('button',{type:'button',class:'linkbtn',onclick:showJoin},t('backSimple')))));
+  try{
+    await ensureAuth();
+    var r=await sb.rpc('company_projects',{p_company:m.co});
+    if(r.error)throw r.error;
+    list.replaceChildren();
+    if(!r.data.length)list.append(h('p',{class:'hint'},t('noProjects')));
+    r.data.forEach(function(p){
+      list.append(h('button',{type:'button',class:'alt proj',onclick:function(){enter('open_project',{p_company:m.co,p_id:p.id,p_name:m.name});}},
+        h('span',{class:'nm'},p.id),h('span',{class:'sa'},p.members+' '+t('peopleN'))));
+    });
+  }catch(e){list.replaceChildren();err.textContent=fail(e);}
+}
+
 function showFullJoin(){
-  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=true;
+  S.session=null;S.gen++;stopSync();clearInterval(tick);S.joinFull=true;S.projCtx=null;
   /* company picker: search stored companies by name or org. number, or add one with its org. number */
   var sel=null,sugItems=[],sugIdx=-1,searchN=0,searchT=null,simT=null,role2=null,roleN=0,inviteNeeded=false;
   try{var lc=JSON.parse(ls('ol.co')||'null');if(lc&&lc.org_nr&&lc.name)sel={org_nr:lc.org_nr,name:lc.name};}catch(e){}
@@ -929,12 +970,7 @@ function showFullJoin(){
   }
   var openAddBtn=h('button',{type:'button',class:'linkbtn',onclick:openAdd},t('addCompany'));
   showSel();
-  var pid=h('input',{type:'text',id:'pid',autocomplete:'off',autocapitalize:'characters',placeholder:t('pidPh'),maxlength:'24'});
   var name=h('input',{type:'text',id:'uname',autocomplete:'given-name',placeholder:t('namePh'),maxlength:'30'});
-  var code=h('input',{type:'text',id:'leadcode',autocomplete:'off',autocapitalize:'none',spellcheck:'false',placeholder:t('codePh'),maxlength:'40'});
-  var codeBox=h('label',{for:'leadcode',hidden:true},t('leadCode'),code,h('p',{class:'hint'},t('leadCodeHint')));
-  var jcIn=h('input',{type:'text',id:'joincode',autocomplete:'off',autocapitalize:'characters',spellcheck:'false',placeholder:t('joinCodePh'),maxlength:'12'});
-  var jcBox=h('label',{for:'joincode'},t('joinCode'),jcIn,h('p',{class:'hint'},t('joinCodeHint')));
   var err=h('div',{class:'err',role:'alert'});
 
   /* company admin: what the signed-in person is in the chosen company */
@@ -945,10 +981,6 @@ function showFullJoin(){
   var claimGo=h('button',{type:'button',class:'alt',onclick:function(){claimAdmin();}},t('claimGo'));
   var claimBox=h('div',{class:'addbox',hidden:true},h('label',{for:'claimcode'},t('adminCode'),claimIn),claimErr,claimGo);
   var claimLink=h('button',{type:'button',class:'linkbtn',hidden:true,onclick:function(){claimBox.hidden=!claimBox.hidden;claimErr.textContent='';if(!claimBox.hidden)claimIn.focus();}},t('iAmAdmin'));
-  var invIn=h('input',{type:'text',id:'invcode',autocomplete:'off',autocapitalize:'characters',spellcheck:'false',maxlength:'12'});
-  var invErr=h('div',{class:'err',role:'alert'});
-  var invGo=h('button',{type:'button',class:'alt',onclick:function(){redeemInvite();}},t('inviteGo'));
-  var inviteBox=h('div',{class:'addbox',hidden:true},h('label',{for:'invcode'},t('inviteCode'),invIn),invErr,invGo);
   async function refreshRole(){
     var n=++roleN;role2=null;
     if(!sel||!sb){renderRole();return;}
@@ -964,7 +996,6 @@ function showFullJoin(){
   function renderRole(){
     claimLink.hidden=!(sel&&role2&&!role2.admin);
     if(claimLink.hidden)claimBox.hidden=true;
-    inviteBox.hidden=!(inviteNeeded&&sel&&role2&&!role2.admin&&!role2.invited_lead);
     adminBox.replaceChildren();adminBox.hidden=true;
     if(!(sel&&role2&&role2.admin))return;
     adminBox.hidden=false;
@@ -995,92 +1026,40 @@ function showFullJoin(){
       await ensureAuth();
       var r=await sb.rpc('claim_company_admin',{p_company:sel.org_nr,p_code:c});
       if(r.error)throw r.error;
+      if(r.data&&r.data.error){claimErr.textContent=t('errClaim');claimGo.disabled=false;return;}
       claimIn.value='';claimBox.hidden=true;toast(t('claimed'));await refreshRole();
-    }catch(e){claimErr.textContent=String((e&&e.message)||'').indexOf('wrong_admin_code')>=0?t('errClaim'):t('errServer');}
+    }catch(e){var cm=String((e&&e.message)||'');claimErr.textContent=cm.indexOf('too_many_attempts')>=0?t('errTooMany'):t('errServer');}
     claimGo.disabled=false;
   }
-  async function redeemInvite(){
-    invErr.textContent='';var c=invIn.value.trim();
-    if(!sel||!sb)return;
-    if(c.length<4){invErr.textContent=t('errInvite');invIn.focus();return;}
-    invGo.disabled=true;
-    try{
-      await ensureAuth();
-      var r=await sb.rpc('redeem_lead_invite',{p_company:sel.org_nr,p_code:c});
-      if(r.error)throw r.error;
-      invIn.value='';inviteNeeded=false;toast(t('invited'));await refreshRole();
-    }catch(e){
-      var m=String((e&&e.message)||'');
-      invErr.textContent=m.indexOf('wrong_invite_code')>=0?t('errInvite'):(m.indexOf('company_pending')>=0?t('errPending'):t('errServer'));
-    }
-    invGo.disabled=false;
-  }
-  var role='electrician';
-  var b1=h('button',{type:'button',class:'role','aria-pressed':'true',onclick:function(){setRole('electrician');}},t('electrician'));
-  var b2=h('button',{type:'button',class:'role','aria-pressed':'false',onclick:function(){setRole('lead');}},t('leadRole'));
-  function setRole(r){role=r;b1.setAttribute('aria-pressed',String(r==='electrician'));b2.setAttribute('aria-pressed',String(r==='lead'));codeBox.hidden=(r!=='lead');jcBox.hidden=(r!=='electrician');err.textContent='';}
-  var btn=h('button',{type:'submit',class:'go2'},t('join'),icon('plus'));
-  function joinError(e){
-    var m=String((e&&e.message)||'');
-    if(m.indexOf('company_not_found')>=0)return t('errNoCompany');
-    if(m.indexOf('company_pending')>=0)return t('errPending');
-    if(m.indexOf('company_rejected')>=0)return t('coRejected');
-    if(m.indexOf('wrong_join_code')>=0)return t('errJoinCode');
-    if(m.indexOf('not_allowed_to_create')>=0){inviteNeeded=true;renderRole();return t('errNotAllowed');}
-    if(m.indexOf('project_not_found')>=0)return role==='lead'?t('needCode'):t('errNoProject');
-    if(m.indexOf('wrong_lead_code')>=0)return t('errWrongCode');
-    if(m.indexOf('bad_project_id')>=0)return t('needPid');
-    if(m.indexOf('bad_name')>=0)return t('needName');
-    return t('errServer');
-  }
-  async function go(isDemo){
-    var n=name.value.trim(),p=pid.value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
-    if(isDemo)p='DEMO';
+  var btn=h('button',{type:'submit',class:'go2'},t('continueBtn'),icon('plus'));
+  async function go(){
+    var n=name.value.trim();
     err.textContent='';
     if(!n){err.textContent=t('needName');name.focus();return;}
-    if(p.length<2){err.textContent=t('needPid');pid.focus();return;}
-    if(p==='DEMO'){start({co:'DEMO',coName:'Demo',pid:'DEMO',name:n,role:role});return;}
     if(!sel){err.textContent=t('needCompany');coIn.focus();return;}
-    var c=code.value.trim();
-    if(role==='lead'&&c.length<4){err.textContent=t('needCode');code.focus();return;}
     if(!sb){err.textContent=t('errServer');return;}
     btn.disabled=true;
     try{
       await ensureAuth();
-      var r=await sb.rpc('join_project',{p_company:sel.org_nr,p_id:p,p_name:n,p_lead:role==='lead',p_lead_code:role==='lead'?c:null,p_join_code:role==='lead'?null:(jcIn.value.trim()||null)});
+      var r=await sb.rpc('company_role',{p_company:sel.org_nr});
       if(r.error)throw r.error;
-      start({co:r.data.company_id,coName:sel.name,pid:r.data.project_id,name:r.data.name,role:r.data.role});
-    }catch(e){err.textContent=joinError(e);btn.disabled=false;}
+      if(r.data.status==='pending'){err.textContent=t('errPending');btn.disabled=false;return;}
+      if(r.data.status==='rejected'){err.textContent=t('coRejected');btn.disabled=false;return;}
+      if(!r.data.admin){err.textContent=t('notAdminYet');claimBox.hidden=false;btn.disabled=false;return;}
+      ls('ol.lead',JSON.stringify({co:sel.org_nr,coName:sel.name,name:n}));
+      showProjects({co:sel.org_nr,coName:sel.name,name:n});
+    }catch(e){err.textContent=String((e&&e.message)||'').indexOf('company_not_found')>=0?t('errNoCompany'):t('errServer');btn.disabled=false;}
   }
-  var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go(false);}},
+  var form=h('form',{class:'form',novalidate:true,onsubmit:function(e){e.preventDefault();go();}},
     h('button',{type:'button',class:'linkbtn',onclick:showJoin},t('backSimple')),
+    h('p',{class:'hint'},t('adminScreenHint')),
     h('div',{class:'cogroup'},h('div',{class:'cobox'},h('label',{for:'company'},t('company'),coIn),coSug),coInfo,openAddBtn,addBox,adminBox,claimLink,claimBox),
-    h('label',{for:'pid'},t('projectId'),pid),
     h('label',{for:'uname'},t('yourName'),name),
-    h('div',null,h('div',{style:'font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px'},t('role')),h('div',{class:'roles'},b1,b2)),
-    jcBox,
-    codeBox,
-    inviteBox,
-    err,
-    btn,
-    h('button',{type:'button',class:'alt',onclick:function(){go(true);}},t('demo')),
-    h('p',{class:'hint'},t('demoHint')));
+    err,btn);
   app.replaceChildren(h('div',{class:'join'},h('div',{class:'wrap'},
     h('div',{class:'brandrow'},brand(),h('div',{class:'sp'}),langSeg()),
-    h('h1',null,t('tagline')),h('p',{class:'lead'},t('lead')),form)));
-  /* a shared link carries company, project and join code: fill them in, then clear the address bar */
-  async function prefill(){
-    var q=new URLSearchParams(location.search),c=digits(q.get('c')),pp=(q.get('p')||'').toUpperCase().replace(/[^A-Z0-9_-]/g,''),j=q.get('j')||'';
-    if(!c&&!pp&&!j)return;
-    try{history.replaceState(null,'',location.pathname);}catch(e){}
-    if(pp)pid.value=pp;
-    if(j)jcIn.value=j.replace(/[^A-Za-z0-9]/g,'').slice(0,12);
-    if(c&&sb){
-      try{await ensureAuth();var r=await sb.from('companies').select('org_nr,name,status').eq('org_nr',c).maybeSingle();if(r.data)pick(r.data);}catch(e){}
-    }
-  }
+    h('h1',null,t('imAdminTitle')),form)));
   if(sel)refreshRole();
-  prefill();
 }
 function brand(){return h('div',{class:'brand'},h('div',{class:'mark'},icon('bolt')),'Order List');}
 function langSeg(){
@@ -1090,11 +1069,11 @@ function langSeg(){
 function setLang(l){
   lang=l;ls('ol.lang',l);
   if(S.session){var v=document.getElementById('itemText');var keep=v?v.value:'';var q=S.qty;buildShell();if(keep)document.getElementById('itemText').value=keep;S.qty=q;setQty(q||1);render();}
-  else if(S.joinFull)showFullJoin();else showJoin();
+  else if(S.projCtx)showProjects(S.projCtx);else if(S.joinFull)showFullJoin();else showJoin();
 }
 
 function start(sess){
-  S.session=sess;S.team=null;S.edit=null;S.demo=(sess.pid==='DEMO');S.tab='today';S.view='item';S.cutoff='15:00';S.editCut=false;S.csvText=null;
+  S.projCtx=null;S.session=sess;S.team=null;S.edit=null;S.demo=(sess.pid==='DEMO');S.tab='today';S.view='item';S.cutoff='15:00';S.editCut=false;S.csvText=null;
   ls('ol.session',JSON.stringify(sess));
   buildShell();connect();
   clearInterval(tick);tick=setInterval(function(){updateCut();render();},30000);
@@ -1496,7 +1475,7 @@ function renderHistory(){
 /* ---------- suppliers screen (leads) ----------
    Pick the project's default supplier from the list, and add, change or delete the company's own suppliers. */
 /* ---------- team: join code for the crew, lead invite code for the company admin ---------- */
-function fmtCode(c){return c&&c.length===6?c.slice(0,3)+'-'+c.slice(3):(c||'');}
+function fmtCode(c){return c&&(c.length===6||c.length===8)?c.slice(0,c.length/2)+'-'+c.slice(c.length/2):(c||'');}
 async function loadTeam(){
   if(S.local||S.demo||!sb)return;
   S.team={loading:true};render();
