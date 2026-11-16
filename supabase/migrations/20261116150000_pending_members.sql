@@ -6,7 +6,9 @@
 --   * is_member, is_lead, is_company_member, is_company_lead only count approved rows
 --   * project_pending / project_approve_member / project_reject_member (approvers only)
 --   * cancel_join_request (the person withdraws their own request)
---   * join_with_code and finish_signup create pending rows; my_access reports the status
+--   * join_with_code creates pending rows; my_access reports the status
+--   * sign-up with a join code is approved at once: the email was just verified with the emailed code
+--     (third way to get approved, next to a lead or a company admin)
 
 alter table public.members add column status text not null default 'approved'
   check (status in ('approved', 'pending'));
@@ -163,7 +165,7 @@ begin
                            'name', v_prof.username, 'role', v_role, 'status', v_mstatus, 'join_code', null);
 end $$;
 
--- 5) Sign-up with a join code also ends in a pending request
+-- 5) Sign-up with a join code: the email was just verified by code, so the person is approved at once
 create or replace function public.finish_signup(p_username text, p_kind text, p_code text default null,
                                      p_company text default null, p_company_name text default null)
 returns json language plpgsql security definer set search_path = '' as $$
@@ -196,7 +198,7 @@ begin
     insert into public.company_leads (company_id, user_id) values (v_co, v_uid) on conflict do nothing;
   else
     insert into public.members (user_id, company_id, project_id, name, role, status)
-      values (v_uid, v_co, v_id, btrim(p_username), 'electrician', 'pending') on conflict do nothing;
+      values (v_uid, v_co, v_id, btrim(p_username), 'electrician', 'approved') on conflict do nothing;
   end if;
   return json_build_object('ok', true, 'role', v_role, 'company_id', v_co, 'company_name', r ->> 'company_name',
                            'project_id', v_id, 'admin_code', v_admin_code, 'lead_code', v_lead_code);
