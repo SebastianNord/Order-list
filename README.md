@@ -14,6 +14,7 @@ asked for what, tags each item with a supplier and exports a CSV per supplier.
 - Live sync between phones, cut-off time, favorites
 - History: flat list of every item ever added in the project (no names, no status) with a quantity picker to add it to today's order
 - Static site (`index.html`), no build step
+- Vue 3, loaded from a CDN (`vue.global.prod.js`, pinned version), is being added screen by screen. The electrician's daily list is the first one: Vue keeps the cards on screen and only patches what changed. The other screens are still plain JavaScript. If Vue cannot load, the old list is drawn instead
 
 ## How it fits together
 

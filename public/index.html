@@ -250,6 +250,7 @@ input.art:focus{outline:none;border-color:var(--accent)}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
 <script src="config.js"></script>
 <script>
 (function(){
@@ -614,6 +615,17 @@ async function patch(id,data){
 /* quantity taps: the number changes at once and only that number is repainted; one save goes out
    half a second after the last tap. Taps made while a save is running are never dropped. */
 function paintQty(it){
+  /* the Vue list patches the number itself; only the small "bump" animation is replayed here */
+  if(mineHost&&mineHost.isConnected&&mineVer){
+    mineVer.value++;
+    window.Vue.nextTick(function(){
+      var c=mineHost.querySelector('[data-id="'+it.id+'"]');if(!c)return;
+      var o=c.querySelector('.mini output');if(o)replay(o,'bump');
+      var b=c.querySelector('.qty');if(b)replay(b,'bump');
+    });
+    if(!S.dirty)lastSig=sig();
+    return;
+  }
   var card=document.querySelector('[data-id="'+it.id+'"]');
   if(!card){render();return;}
   var o=card.querySelector('.mini output');if(o){o.textContent=String(it.qty);replay(o,'bump');}
@@ -748,11 +760,17 @@ function appHref(url){
   if(!pkg)return null;
   return 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+pkg+';S.browser_fallback_url='+encodeURIComponent(url)+';end';
 }
-function findLink(sup,text,article){
+/* link data for a supplier search; findLink draws it as a DOM node, the Vue list reads the same data */
+function linkData(sup,text,article){
   if(!sup)return null;
   var q=(article||'').trim()||text,url=supUrl(sup,q),app=appHref(url);
-  var a=h('a',{class:'lnk',href:app||url,rel:'noopener noreferrer'},icon('ext'),t('findAt')+' '+sup.name);
-  if(!app)a.target='_blank';
+  return {href:app||url,app:!!app,label:t('findAt')+' '+sup.name};
+}
+function findLink(sup,text,article){
+  var d=linkData(sup,text,article);
+  if(!d)return null;
+  var a=h('a',{class:'lnk',href:d.href,rel:'noopener noreferrer'},icon('ext'),d.label);
+  if(!d.app)a.target='_blank';
   return a;
 }
 /* card box: product image with a small quantity badge when the article number has an image, else the quantity */
@@ -1285,7 +1303,8 @@ function render(){
   else if(S.tab==='history')body=renderHistory();
   else if(S.tab==='favs')body=renderFavorites();
   else body=isLead()?renderLead():renderMine();
-  c.replaceChildren(body);
+  /* the Vue list stays in place and patches itself, so it is never torn out and put back */
+  if(c.firstChild!==body||c.lastChild!==body)c.replaceChildren(body);
 }
 /* true while someone is typing in an article box or the supplier form, so a refresh does not wipe it */
 function typing(){
@@ -1314,8 +1333,9 @@ function renderBanner(){
   if(inp){inp.disabled=!S.canWrite;go.disabled=!S.canWrite;}
 }
 
+var EMPTY_SVG='<svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="14" y="26" width="68" height="52" rx="12" fill="var(--accent-soft)"/><path d="M30 26v-6a18 18 0 0136 0v6" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M40 52l6 6 12-13" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function emptyState(title,p){
-  return h('div',{class:'empty'},h('span',{html:'<svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="14" y="26" width="68" height="52" rx="12" fill="var(--accent-soft)"/><path d="M30 26v-6a18 18 0 0136 0v6" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><path d="M40 52l6 6 12-13" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}),
+  return h('div',{class:'empty'},h('span',{html:EMPTY_SVG}),
     h('h2',null,title),h('p',null,p));
 }
 /* today's list: items added today, plus anything from earlier days that is not ordered yet or was ordered today (drops off at the next midnight) */
@@ -1324,6 +1344,9 @@ function shortDate(ds){var p=ds.split('-');return new Date(+p[0],+p[1]-1,+p[2]).
 /* pills for a set of entries: "Late" (added after cut-off; with its date once it has moved to a later day)
    or "Unordered" + date (carried over, not late). Same-day late items get "Late" without a date. */
 function pillsFor(entries){
+  return pillList(entries).map(function(p){return h('span',{class:'pill late'},p.label);});
+}
+function pillList(entries){
   var d=today(),seen={},out=[];
   entries.forEach(function(e){
     var moved=e.date<d,kind=e.late?'late':(moved?'unordered':null);
@@ -1332,12 +1355,118 @@ function pillsFor(entries){
     if(seen[k])return;seen[k]=1;out.push({kind:kind,date:dt});
   });
   return out.sort(function(a,b){return a.date.localeCompare(b.date);}).map(function(p){
-    return h('span',{class:'pill late'},t(p.kind)+(p.date?' '+shortDate(p.date):''));
+    return {label:t(p.kind)+(p.date?' '+shortDate(p.date):'')};
   });
 }
 
-/* electrician: my list */
+/* ---------- Vue island: the electrician's list ----------
+   Vue 3 from a CDN (no build step). The cards stay on screen and Vue only patches what changed.
+   S stays the single source of truth: render() bumps mineVer so Vue reads S again.
+   If Vue could not load, renderMineClassic below draws the same list the old way. */
+var mineVer=null,mineHost=null,mineSticky={};
+function svgIcon(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[n]+'</svg>';}
+/* the pop animation plays once per item; the class then stays so a patch never cuts it short */
+function freshSticky(it){
+  if(mineSticky[it.id])return true;
+  if(freshOnce([it])){mineSticky[it.id]=1;return true;}
+  return false;
+}
+function mountMine(){
+  var V=window.Vue;
+  mineVer=V.ref(0);
+  var QtyBox={
+    props:{article:String,qty:[Number,String]},
+    setup:function(p){
+      var url=V.ref(null);
+      function check(){
+        var art=(p.article||'').trim();url.value=null;
+        if(!art||imgState[art]===false)return;
+        if(imgOk[art]){url.value=imgOk[art].src;return;}
+        var img=new Image();img.referrerPolicy='no-referrer';
+        img.onload=function(){imgState[art]=true;imgOk[art]=img;if((p.article||'').trim()===art)url.value=img.src;};
+        img.onerror=function(){imgState[art]=false;};
+        img.src=IMG_BASE+encodeURIComponent(art)+'/MEDIUM';
+      }
+      V.watch(function(){return p.article;},check,{immediate:true});
+      return {url:url};
+    },
+    template:'<div class="qty" :class="{hasimg:!!url}"><template v-if="url"><img :src="url" alt="" decoding="sync" referrerpolicy="no-referrer"><span class="qb">×{{qty}}</span></template><template v-else>×{{qty}}</template></div>'
+  };
+  /* the inline edit form is still the old hand-built one; this card just hosts it */
+  var EditCard={
+    props:{item:Object},
+    mounted:function(){this.$el.appendChild(editForm([this.item.id],this.item.text,this.item.article));},
+    template:'<div class="card" :data-id="item.id"></div>'
+  };
+  var MineList={
+    components:{QtyBox:QtyBox,EditCard:EditCard},
+    setup:function(){
+      var rows=V.computed(function(){
+        mineVer.value;
+        var me=S.session&&S.session.name;
+        return todays().filter(function(i){return i.by===me;})
+          .sort(function(a,b){return (b.at||'').localeCompare(a.at||'');})
+          .map(function(it){
+            var can=!it.ordered&&S.canWrite;
+            return {it:it,time:hhmm(it.at),pills:pillList([it]),editing:S.edit==='i:'+it.id,fav:isFav(it.text),
+              can:can,fresh:freshSticky(it),link:linkData(supById(S.defaultId),it.text,it.article)};
+          });
+      });
+      return {
+        rows:rows,emptySvg:EMPTY_SVG,
+        tx:function(k){mineVer.value;return t(k);},
+        ico:svgIcon,
+        bump:bumpQty,
+        del:function(id){remove(id);},
+        fav:function(text){toggleFav(text);render();},
+        edit:function(id){S.edit='i:'+id;render();}
+      };
+    },
+    template:
+      '<div v-if="!rows.length" class="empty"><span v-html="emptySvg"></span><h2>{{tx(\'emptyMine\')}}</h2><p>{{tx(\'emptyMineP\')}}</p></div>'+
+      '<div v-else class="list"><template v-for="r in rows" :key="r.it.id">'+
+        '<EditCard v-if="r.editing" :item="r.it"/>'+
+        '<div v-else class="card" :class="{done:r.it.ordered,fresh:r.fresh}" :data-id="r.it.id">'+
+          '<QtyBox :article="r.it.article" :qty="r.it.qty"/>'+
+          '<div class="main"><div class="title">{{r.it.text}}</div>'+
+            '<div class="meta">{{r.time}}'+
+              '<span v-for="p in r.pills" class="pill late">{{p.label}}</span>'+
+              '<span v-if="r.it.ordered" class="pill ok"><span class="ic" v-html="ico(\'check\')"></span>{{tx(\'ordered\')}}</span>'+
+              '<span v-if="r.it.article" class="pill art">{{r.it.article}}</span>'+
+            '</div></div>'+
+          '<div class="acts">'+
+            '<div v-if="r.can" class="mini" role="group">'+
+              '<button type="button" aria-label="−" @click="bump(r.it.id,-1)"><span class="ic" v-html="ico(\'minus\')"></span></button>'+
+              '<output>{{r.it.qty}}</output>'+
+              '<button type="button" aria-label="+" @click="bump(r.it.id,1)"><span class="ic" v-html="ico(\'plus\')"></span></button>'+
+            '</div>'+
+            '<a v-if="r.link" class="lnk" :href="r.link.href" rel="noopener noreferrer" :target="r.link.app?null:\'_blank\'"><span class="ic" v-html="ico(\'ext\')"></span>{{r.link.label}}</a>'+
+            '<button type="button" class="sq" :class="{on:r.fav}" :aria-label="tx(\'fav\')" :aria-pressed="String(r.fav)" :title="tx(\'fav\')" @click="fav(r.it.text)"><span class="ic" v-html="ico(\'star\')"></span></button>'+
+            '<button v-if="r.can" type="button" class="sq del" aria-label="Delete" @click="del(r.it.id)"><span class="ic" v-html="ico(\'trash\')"></span></button>'+
+            '<button v-if="r.can" type="button" class="sq" :aria-label="tx(\'editRow\')" :title="tx(\'editRow\')" @click="edit(r.it.id)"><span class="ic" v-html="ico(\'edit\')"></span></button>'+
+          '</div>'+
+        '</div>'+
+      '</template></div>'
+  };
+  mineHost=document.createElement('div');
+  V.createApp(MineList).mount(mineHost);
+}
 function renderMine(){
+  if(window.Vue){
+    try{
+      if(!mineHost)mountMine();
+      mineVer.value++;
+      return mineHost;
+    }catch(e){
+      if(window.console)console.error('Vue list failed, using the classic list',e);
+      window.Vue=null;mineHost=null;mineVer=null;
+    }
+  }
+  return renderMineClassic();
+}
+
+/* electrician: my list, classic version (used only when Vue is not available) */
+function renderMineClassic(){
   var mine=todays().filter(function(i){return i.by===S.session.name;}).sort(function(a,b){return (b.at||'').localeCompare(a.at||'');});
   if(!mine.length)return emptyState(t('emptyMine'),t('emptyMineP'));
   var list=h('div',{class:'list'});
