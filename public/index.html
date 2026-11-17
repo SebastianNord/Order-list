@@ -277,7 +277,7 @@ function h(tag,props){
   return e;
 }
 var ICONS={
-  plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',next:'<path d="M5 12h14M13 6l6 6-6 6"/>',minus:'<path d="M5 12h14"/>',
   star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z"/>',
   trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
   ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
@@ -1028,7 +1028,7 @@ async function restoreAccess(force){
 function projCard(title,line,badge,go){
   return h('button',{type:'button',class:'pcard',onclick:go},
     h('span',{class:'tx'},badge?h('span',{class:'rb'},badge):null,h('span',{class:'t1'},title),line?h('span',{class:'t2'},line):null),
-    h('span',{class:'pgo','aria-hidden':'true'},icon('plus')));
+    h('span',{class:'pgo','aria-hidden':'true'},icon('next')));
 }
 function showPicker(opts,username){
   var list=h('div',{class:'projlist'});
