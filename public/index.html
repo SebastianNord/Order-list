@@ -626,6 +626,7 @@ function paintQty(it){
   var card=document.querySelector('[data-id="'+it.id+'"]');
   if(!card){render();return;}
   var o=card.querySelector('.mini output');if(o){o.textContent=String(it.qty);replay(o,'bump');}
+  var ql=card.querySelector('.q');if(ql)ql.textContent='×'+it.qty;
   var box=card.querySelector('.qty');
   if(box){var qb=box.querySelector('.qb');if(qb)qb.textContent='×'+it.qty;else box.textContent='×'+it.qty;replay(box,'bump');}
   if(!S.dirty)lastSig=sig();
@@ -651,6 +652,25 @@ async function flushQty(id){
   p.flying=false;
   if(p.qty!==sent){clearTimeout(p.timer);flushQty(id);}
   else{clearTimeout(p.timer);delete pendingQty[id];}
+}
+/* lead: + / - on a merged item. + goes to the lead's own entry (a new one if there is none). - takes from the lead's
+   entry first, then the newest entry with more than 1; if every entry is already 1 it drops one entry. The total never goes below 1. */
+function bumpGroup(g,d){
+  if(!S.canWrite||g.ordered)return;
+  var open=g.entries.filter(function(e){return !e.ordered;});
+  var newest=open.slice().sort(function(a,b){return (b.at||'').localeCompare(a.at||'');});
+  var mine=newest.filter(function(e){return e.by===S.session.name;});
+  var total=open.reduce(function(n,e){return n+(+e.qty||1);},0);
+  if(d>0){if(mine.length)bumpQty(mine[0].id,1);else addItem(g.text,1,g.article);return;}
+  if(total<=1)return;
+  var pick=mine.filter(function(e){return e.qty>1;})[0]||newest.filter(function(e){return e.qty>1;})[0];
+  if(pick){bumpQty(pick.id,-1);return;}
+  remove((mine[0]||newest[0]).id);
+}
+function stepper(label,onMinus,onPlus,minusOff){
+  return h('div',{class:'mini',role:'group','aria-label':label},
+    h('button',{type:'button','aria-label':'−',disabled:minusOff||null,onclick:onMinus},icon('minus')),h('output',null,''),
+    h('button',{type:'button','aria-label':'+',onclick:onPlus},icon('plus')));
 }
 async function removeMany(ids){
   try{
@@ -1435,6 +1455,11 @@ function supSelect(g){
   return h('button',{type:'button',class:'btn supcycle','aria-label':t('supplierFor')+' '+g.text+': '+opts[i].label,title:t('supplierFor')+' '+g.text,disabled:!S.canWrite||null,
     onclick:function(){setForGroup(g,{supplier_id:next.id});}},opts[i].label);
 }
+function lineStepper(g){
+  var el=stepper('Quantity',function(){bumpGroup(g,-1);},function(){bumpGroup(g,1);},g.qty<=1);
+  el.querySelector('output').textContent=String(g.qty);
+  return el;
+}
 function groupCard(g,locked){
   var meta=h('div',{class:'meta'});
   byPerson(g).forEach(function(p){
@@ -1451,7 +1476,12 @@ function groupCard(g,locked){
   var chk=g.ordered&&g.entries.some(function(e){return checked[e.id];});
   if(chk)g.entries.forEach(function(e){delete checked[e.id];});
   return h('div',{class:'card'+(g.ordered?' done':'')+(freshOnce(g.entries)?' fresh':'')+(chk?' checked':''),'data-ids':g.entries.map(function(e){return e.id;}).join(',')},qtyBox(g.article,g.qty),h('div',{class:'main'},h('div',{class:'title copy',onclick:function(){copyText(g.text);}},g.text),meta),
-    h('div',{class:'acts'},art,S.canWrite?editBtn(ek,'wide'):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord));
+    h('div',{class:'acts'},!g.ordered&&S.canWrite?lineStepper(g):null,art,S.canWrite?editBtn(ek,'wide'):null,supSelect(g),findLink(effSup(g),g.text,g.article),ord));
+}
+function personStepper(i){
+  var el=stepper('Quantity',function(){bumpQty(i.id,-1);},function(){bumpQty(i.id,1);},false);
+  el.querySelector('output').textContent=String(i.qty);
+  return el;
 }
 function renderPeople(all){
   var m={},o=[];all.forEach(function(i){if(!m[i.by]){m[i.by]=[];o.push(i.by);}m[i.by].push(i);});
@@ -1461,6 +1491,7 @@ function renderPeople(all){
     var items=m[n],card=h('div',{class:'person'},h('h3',null,h('div',{class:'av'},(n[0]||'?').toUpperCase()),n,h('span',{class:'n'},items.length+' '+t('itemsN').toLowerCase())));
     items.forEach(function(i){card.append(h('div',{class:'line'+(i.ordered?' ordered':''),'data-id':i.id},h('span',{class:'q'},'×'+i.qty),h('span',{class:'t'},i.text),
       pillsFor([i]),i.ordered?h('span',{class:'pill ok'},icon('check')):null,
+      !i.ordered&&S.canWrite?personStepper(i):null,
       S.canWrite?h('button',{type:'button',class:'sq del'+(S.confirm==='i:'+i.id?' sure':''),'aria-label':t('delOne'),title:t('delOne'),onclick:function(){askDelete('i:'+i.id,[i.id]);}},S.confirm==='i:'+i.id?t('delSure'):icon('trash')):null));});
     list.append(card);
   });
