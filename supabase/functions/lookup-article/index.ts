@@ -108,7 +108,7 @@ Deno.serve(async (req: Request) => {
     if (ageDays < (r.found ? FOUND_DAYS : NOT_FOUND_DAYS)) fresh.set(r.article_no, r);
   }
 
-  let failed = false;
+  let failed = "";
   for (const n of candidates) {
     let hit = fresh.get(n);
     if (!hit) {
@@ -118,12 +118,13 @@ Deno.serve(async (req: Request) => {
         await db.from("supplier_product_cache").upsert({
           supplier_key: supplier, article_no: n, found: hit.found, name: hit.name, fetched_at: new Date().toISOString(),
         });
-      } catch {
-        failed = true;
+      } catch (e) {
+        failed = String((e as Error)?.message ?? e).slice(0, 120);
+        console.error(`lookup ${supplier} ${n} failed: ${failed}`);
         continue;
       }
     }
     if (hit.found && hit.name) return json({ found: true, article: n, name: hit.name, image: adapter.image(n) });
   }
-  return json(failed ? { found: false, error: "unavailable" } : { found: false });
+  return json(failed ? { found: false, error: "unavailable", reason: failed } : { found: false });
 });
